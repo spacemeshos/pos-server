@@ -1,11 +1,17 @@
 # gpu-post-bindings
 
-Before building the project, you need to build the gpu-setup library and copy the shared object to the root of the project. For linux and macOS, the library name should be libgpu-setup.
+## Building
 
-For build:
+Before building the project, you need to build the `post-gpu` library and copy the shared object to the root of the project. 
+For macOS, the library file is `libgpu-setup.dylib`, for Linux it is `libgpu-setup.so`.
+In windows, copy `gpu-setup.dll` and `gpu-setup.lib`.
 
-cargo build
+```bash
+RUSTFLAGS="-L /path/to/project/root" cargo build
+```
 
-For run demo app:
+## Running the Demo App
 
-cargo run
+```bash
+RUSTFLAGS="-L /path/to/project/root" cargo run
+```
