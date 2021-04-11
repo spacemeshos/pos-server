@@ -5,15 +5,7 @@ pub const SPACEMESH_API_ERROR: i32 = -1;
 pub const SPACEMESH_API_ERROR_TIMEOUT: i32 = -2;
 pub const SPACEMESH_API_ERROR_ALREADY: i32 = -3;
 pub const SPACEMESH_API_ERROR_CANCELED: i32 = -4;
-
 pub const SPACEMESH_API_THROTTLED_MODE: i32 = 0x00008000;
-/*
-typedef struct _PostComputeProvider {
-    uint32_t id; // 0, 1, 2...
-    char model[256]; // e.g. Nvidia GTX 2700
-    ComputeApiClass compute_api; // A provided compute api
-} PostComputeProvider;
-*/
 pub const COMPUTE_API_CLASS_UNSPECIFIED: u32 = 0;
 pub const COMPUTE_API_CLASS_CPU: u32 = 1; // useful for testing on systems without a cuda or vulkan GPU
 pub const COMPUTE_API_CLASS_CUDA: u32 = 2;
@@ -25,7 +17,7 @@ pub struct PostComputeProvider {
     pub compute_api: u32, // A provided compute api
 }
 
-#[link(name = "gpu-setup")]
+#[link (name = "gpu-setup")]
 extern "C" {
     fn scryptPositions(
         provider_id: u32,          // POST compute provider ID
@@ -62,14 +54,6 @@ pub fn get_providers() -> Vec<PostComputeProvider> {
         let p: *mut u8 = ptr::null_mut();
         let providers_count = spacemesh_api_get_providers(p, 0);
         let mut dst: Vec<PostComputeProvider> = Vec::with_capacity(providers_count as usize);
-        /*
-            if providers_count > 0 {
-                let pdst = dst.as_mut_ptr();
-                spacemesh_api_get_providers(pdst as *mut u8, providers_count);
-            }
-
-                dst.set_len(providers_count as usize);
-        */
         if providers_count > 0 {
             let mut buffer: Vec<u8> = Vec::new();
             buffer.resize((providers_count * 264) as usize, 0);
