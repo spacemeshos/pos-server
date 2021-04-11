@@ -1,6 +1,6 @@
 [package]
-name = "gpu-post-bindings"
-version = "0.0.1"
+name = "gpu-post"
+version = "0.1.0"
 authors = ["spacemesh <devteam@spacemesh.io>"]
 edition = "2018"
 
@@ -12,8 +12,6 @@ rustc_version = "0.2"
 [lib]
 path = "src/lib.rs"
 name = "gpu_post_bindings"
-
-# links = "gpu-setup"
 
 [[bin]]
 path = "src/main.rs"

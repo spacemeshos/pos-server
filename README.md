@@ -1,6 +1,6 @@
 # gpu-post-bindings
 
-A Rust library for using Spacemesh [gpu-post](http://github.com/spacemeshos/gpu-post) c-lib form Rust.
+A Rust create for using Spacemesh [gpu-post](http://github.com/spacemeshos/gpu-post) c-lib form Rust.
 
 ## Building
 
