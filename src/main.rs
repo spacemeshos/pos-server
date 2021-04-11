@@ -10,7 +10,6 @@ fn do_benchmark() {
     let salt: [u8; 32] = [0; 32];
     let providers = post::get_providers();
 
-
     if providers.len() > 0 {
         const out_size: usize = (LABELS_COUNT as usize * LABEL_SIZE as usize + 7) / 8;
         let mut out: [u8; out_size] = [0; out_size];
