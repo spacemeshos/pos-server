@@ -1,0 +1,19 @@
+[package]
+name = "gpu-post"
+version = "0.1.0"
+authors = ["avive <avive@spacemesh.io>"]
+edition = "2018"
+
+[build]
+rustflags = ["-L", "./crates/gpu-post"]
+
+[build-dependencies]
+rustc_version = "0.2"
+
+[lib]
+path = "src/lib.rs"
+name = "gpu_post"
+
+[[bin]]
+path = "src/main.rs"
+name = "gpu_post_test"

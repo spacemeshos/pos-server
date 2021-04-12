@@ -1,0 +1,29 @@
+[package]
+name = "pos-service"
+version = "0.1.0"
+authors = ["avive <avive@spacemesh.io>"]
+edition = "2018"
+
+[dependencies]
+gpu-post = { path = "../gpu-post" }
+
+bytes = { version = "0.6", features = ["serde"] }
+log = "*"
+env_logger = "*"
+anyhow = "1"
+datetime = "*"
+xactor = { version = "0.7.11", features = ["runtime-tokio"], default-features = false}
+xactor-derive = "0.7.0"
+async-trait = "0.1.42"
+futures = "0.3.8"
+nix = "0.19.1"
+getopts = "*"
+tonic = "0.3"
+tonic-health = "0.2"
+tokio = {  version = "1.4.0", features = ["full"]}
+
+[[bin]]
+path = "src/main.rs"
+name = "post_service"
+
+

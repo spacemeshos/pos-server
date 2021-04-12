@@ -1,21 +1,7 @@
-[package]
-name = "gpu-post"
-version = "0.1.0"
-authors = ["spacemesh <devteam@spacemesh.io>"]
-edition = "2018"
+[workspace]
 
-[build]
-rustflags = ["-L", "."]
+members = [
+    "crates/gpu-post",
+    "crates/pos-service"
+]
 
-[build-dependencies]
-rustc_version = "0.2"
-
-[dependencies]
-
-[lib]
-path = "src/lib.rs"
-name = "gpu_post_bindings"
-
-[[bin]]
-path = "src/main.rs"
-name = "gpu-binding-test"
