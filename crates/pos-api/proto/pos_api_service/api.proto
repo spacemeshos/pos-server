@@ -1,5 +1,5 @@
 syntax = "proto3";
-package pos_api;
+package api;
 
 // A proof of space data creation service
 service PosDataService {
@@ -23,7 +23,7 @@ service PosDataService {
   rpc AbortJob(AbortJobRequest) returns (AbortJobResponse);
 
   // Subscribe to stream of Job status updates for a specific Job or for all Jobs
-  rpc SubscribeJobStatusStream(JobStatusStreamRequest) returns (stream JobStatusStreamResponse);
+  // rpc SubscribeJobStatusStream(JobStatusStreamRequest) returns (stream JobStatusStreamResponse);
 }
 
 // Service global configuration
