@@ -1,19 +1,20 @@
 [package]
-name = "gpu-post"
+name = "pos-compute"
 version = "0.1.0"
 authors = ["avive <avive@spacemesh.io>"]
+description = "proof of space compute library"
 edition = "2018"
 
 [build]
-rustflags = ["-L", "./crates/gpu-post"]
+rustflags = ["-L", "./crates/pos-compute/resources"]
 
 [build-dependencies]
 rustc_version = "0.2"
 
 [lib]
 path = "src/lib.rs"
-name = "gpu_post"
+name = "pos_compute"
 
 [[bin]]
 path = "src/main.rs"
-name = "gpu_post_test"
+name = "pos_compute_test"

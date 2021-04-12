@@ -300,13 +300,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gpu-post"
-version = "0.1.0"
-dependencies = [
- "rustc_version",
-]
-
-[[package]]
 name = "h2"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -755,6 +748,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "pos-compute"
+version = "0.1.0"
+dependencies = [
+ "rustc_version",
+]
+
+[[package]]
 name = "pos-service"
 version = "0.1.0"
 dependencies = [
@@ -765,10 +765,10 @@ dependencies = [
  "env_logger",
  "futures",
  "getopts",
- "gpu-post",
  "log",
  "nix",
  "pos-api",
+ "pos-compute",
  "tokio 1.4.0",
  "tonic",
  "tonic-health",

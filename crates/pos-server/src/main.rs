@@ -1,8 +1,8 @@
-extern crate gpu_post;
 extern crate pos_api;
+extern crate pos_compute;
 
-use gpu_post::*;
 use pos_api::*;
+use pos_compute::*;
 
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {

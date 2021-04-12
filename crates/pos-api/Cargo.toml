@@ -2,6 +2,7 @@
 name = "pos-api"
 version = "0.1.0"
 authors = ["avive <avive@spacemesh.io>"]
+description = "proof of space server api"
 edition = "2018"
 
 [build-dependencies]

@@ -3,9 +3,10 @@ name = "pos-service"
 version = "0.1.0"
 authors = ["avive <avive@spacemesh.io>"]
 edition = "2018"
+description = "proof of space creation server"
 
 [dependencies]
-gpu-post = { path = "../gpu-post" }
+pos-compute = { path = "../pos-compute" }
 pos-api = { path = "../pos-api" }
 
 bytes = { version = "0.6", features = ["serde"] }

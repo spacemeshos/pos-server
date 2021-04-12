@@ -1,5 +1,5 @@
 COLOR ?= auto # Valid COLOR options: {always, auto, never}
-CARGO = RUSTFLAGS="-L ./crates/gpu-post/resources" cargo --color $(COLOR)
+CARGO = RUSTFLAGS="-L ./crates/pos-compute/resources" cargo --color $(COLOR)
 
 .PHONY: all bench build check clean doc install publish run test update format
 
