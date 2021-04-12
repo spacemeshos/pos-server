@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 gpu-post = { path = "../gpu-post" }
+pos-api = { path = "../pos-api" }
 
 bytes = { version = "0.6", features = ["serde"] }
 log = "*"

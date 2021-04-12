@@ -1,5 +1,5 @@
 syntax = "proto3";
-package sm.post_server;
+package pos_api;
 
 // A proof of space data creation service
 service PosDataService {

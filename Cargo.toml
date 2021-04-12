@@ -2,6 +2,7 @@
 
 members = [
     "crates/gpu-post",
-    "crates/pos-service"
+    "crates/pos-server",
+    "crates/pos-api"
 ]
 
