@@ -54,7 +54,7 @@ impl PosServer {
                 task_config.indexes_per_compute_cycle * task_config.bits_per_index as u64;
 
             let iterations = task_job.size_bits / bits_per_cycle;
-            let _last_cycle_bits = task_job.size_bits - (cycles * bits_per_cycle);
+            let _last_cycle_bits = task_job.size_bits - (iterations * bits_per_cycle);
 
             let mut buffer = vec![
                 0_u8;
