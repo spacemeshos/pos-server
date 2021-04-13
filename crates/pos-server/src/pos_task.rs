@@ -13,7 +13,7 @@ use pos_compute::scrypt_positions;
 use std::fs;
 
 impl PosServer {
-    /// helper sync function used to update job status from blocking code
+    /// helper sync function used to update job status via the server service from blocking code
     fn update_job_status(job: &Job) -> Result<()> {
         let task_job = job.clone();
         tokio::spawn(async move {
@@ -28,6 +28,7 @@ impl PosServer {
         Ok(())
     }
 
+    // Start a pos data file creation task for a job
     pub(crate) async fn start_task(&mut self, job: &Job) -> Result<Job> {
         if self.providers_pool.is_empty() {
             bail!("unexpected condition: no available providers")
@@ -44,15 +45,15 @@ impl PosServer {
         // return job with updated data
         let res_job = task_job.clone();
 
-        // check that write path is valid and create folder with job.id
-
         let task_config = self.config.clone();
+
+        // todo: add task params validation here before starting
 
         let _handle = task::spawn_blocking(move || {
             let bits_per_cycle =
                 task_config.indexes_per_compute_cycle * task_config.bits_per_index as u64;
 
-            let cycles = task_job.size_bits / bits_per_cycle;
+            let iterations = task_job.size_bits / bits_per_cycle;
             let _last_cycle_bits = task_job.size_bits - (cycles * bits_per_cycle);
 
             let mut buffer = vec![
@@ -75,9 +76,14 @@ impl PosServer {
 
             let mut file_writer = BufWriter::new(file);
 
-            for i in 0..cycles {
+            for i in 0..iterations {
                 let start_idx = i * task_config.indexes_per_compute_cycle;
                 let end_idx = start_idx + task_config.indexes_per_compute_cycle - 1;
+
+                info!(
+                    "job: {}. executing pos iter {} / {} ",
+                    task_job.id, i, iterations
+                );
 
                 scrypt_positions(
                     task_job.compute_provider_id,
@@ -96,6 +102,8 @@ impl PosServer {
                 );
 
                 if hashes_computed < task_config.indexes_per_compute_cycle {
+                    error!("gpu compute error for job: {}. ", task_job.id);
+
                     task_job.last_error = Some(JobError {
                         error: 500,
                         message: "gpu compute error".to_string(),
@@ -117,7 +125,7 @@ impl PosServer {
             // todo: do last cycle (if needed)
 
             // todo: flush file
-            file_writer.flush();
+            file_writer.flush().expect("failed to flush pos data file");
 
             if task_job.status == JobStatus::Started as i32 {
                 // if task was running and didn't stop due to an error then mark it as complete
