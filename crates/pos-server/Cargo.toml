@@ -2,8 +2,8 @@
 name = "pos-service"
 version = "0.1.0"
 authors = ["avive <avive@spacemesh.io>"]
-edition = "2018"
 description = "proof of space creation server"
+edition = "2018"
 
 [dependencies]
 pos-compute = { path = "../pos-compute" }

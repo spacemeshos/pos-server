@@ -12,7 +12,7 @@ pub const COMPUTE_API_CLASS_CPU: u32 = 1; // useful for testing on systems witho
 pub const COMPUTE_API_CLASS_CUDA: u32 = 2;
 pub const COMPUTE_API_CLASS_VULKAN: u32 = 3;
 
-pub struct PostComputeProvider {
+pub struct PosComputeProvider {
     pub id: u32,          // 0, 1, 2...
     pub model: String,    // e.g. Nvidia GTX 2700
     pub compute_api: u32, // A provided compute api
@@ -50,11 +50,11 @@ extern "C" {
     ) -> i32;
 }
 
-pub fn get_providers() -> Vec<PostComputeProvider> {
+pub fn get_providers() -> Vec<PosComputeProvider> {
     unsafe {
         let p: *mut u8 = ptr::null_mut();
         let providers_count = spacemesh_api_get_providers(p, 0);
-        let mut dst: Vec<PostComputeProvider> = Vec::with_capacity(providers_count as usize);
+        let mut dst: Vec<PosComputeProvider> = Vec::with_capacity(providers_count as usize);
         if providers_count > 0 {
             let mut buffer: Vec<u8> = Vec::new();
             buffer.resize((providers_count * 264) as usize, 0);
@@ -62,7 +62,7 @@ pub fn get_providers() -> Vec<PostComputeProvider> {
             spacemesh_api_get_providers(pdst as *mut u8, providers_count);
             for i in 0..providers_count {
                 let offset: usize = 264 * i as usize;
-                let mut provider = PostComputeProvider {
+                let mut provider = PosComputeProvider {
                     id: buffer[offset + 0] as u32,
                     model: "".to_string(),
                     compute_api: buffer[offset + 260] as u32,
@@ -166,7 +166,7 @@ pub fn do_benchmark() {
     }
 }
 
-pub fn get_provider_class_string(class: u32) -> &'static str {
+fn get_provider_class_string(class: u32) -> &'static str {
     match class {
         COMPUTE_API_CLASS_UNSPECIFIED => "UNSPECIFIED",
         COMPUTE_API_CLASS_CPU => "CPU",
@@ -178,7 +178,7 @@ pub fn get_provider_class_string(class: u32) -> &'static str {
 
 pub fn do_providers_list() {
     let providers = get_providers();
-    println!("Available POST compute providers:");
+    println!("Available pos compute providers:");
     for provider in &providers {
         println!(
             "{}: [{}] {}",
