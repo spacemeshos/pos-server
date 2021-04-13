@@ -122,7 +122,7 @@ impl PosServer {
                 PosServer::update_job_status(&task_job);
             }
 
-            // todo: do last cycle (if needed)
+            // todo: do last iteration (if needed)
 
             // todo: flush file
             file_writer.flush().expect("failed to flush pos data file");
@@ -133,7 +133,7 @@ impl PosServer {
                 task_job.stopped = datetime::Instant::now().seconds() as u64;
             }
 
-            PosServer::update_job_status(&task_job);
+            let _ = PosServer::update_job_status(&task_job);
         });
 
         Ok(res_job)

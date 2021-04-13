@@ -34,7 +34,6 @@ impl Display for Job {
             write!(f, "stopped: {}", stopped.to_rfc2822())?;
         }
         write!(f, "bytes written (bits): {}", self.bits_written)?;
-
         write!(f, "client id: {}", hex::encode(self.client_id.clone()))?;
 
         if let Some(err) = self.last_error.as_ref() {
@@ -42,7 +41,6 @@ impl Display for Job {
         }
 
         write!(f, "gpu id: {}", self.compute_provider_id)?;
-
         write!(f, "pow index: {}", self.proof_of_work_index)
     }
 }
