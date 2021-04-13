@@ -1,18 +1,23 @@
 use crate::api::pos_grpc_service::PosGrpcService;
 
+use anyhow::bail;
 use anyhow::Result;
+use datetime::Instant;
+use pos_api::api::job::JobStatus;
 use pos_api::api::pos_data_service_server::PosDataServiceServer;
-use pos_api::api::{Config, Job};
+use pos_api::api::{AbortJobRequest, AddJobRequest, Config, Job, JobError};
 use pos_compute::{get_providers, PosComputeProvider};
+use rand_core::{OsRng, RngCore};
 use std::collections::HashMap;
 use tonic::transport::Server;
 use xactor::*;
 
 pub(crate) struct PosServer {
-    providers: Vec<PosComputeProvider>, // gpu compute providers
-    pending_jobs: Vec<Job>,             // pending
-    jobs: HashMap<u64, Job>,            // in progress
-    config: Config,                     // compute config
+    providers: Vec<PosComputeProvider>,  // gpu compute providers
+    pending_jobs: Vec<Job>,              // pending
+    pub(crate) jobs: HashMap<u64, Job>,  // in progress
+    pub(crate) config: Config,           // compute config
+    pub(crate) providers_pool: Vec<u32>, // idle providers
 }
 
 #[async_trait::async_trait]
@@ -40,7 +45,11 @@ impl Default for PosServer {
                 indexes_per_compute_cycle: 9 * 128 * 1024,
                 bits_per_index: 8,
                 salt: vec![],
+                n: 512,
+                r: 1,
+                p: 1,
             },
+            providers_pool: vec![],
         }
     }
 }
@@ -52,6 +61,9 @@ pub(crate) struct Init {}
 impl Handler<Init> for PosServer {
     async fn handle(&mut self, _ctx: &mut Context<Self>, _msg: Init) -> Result<()> {
         self.providers = get_providers();
+        for provider in self.providers.iter() {
+            self.providers_pool.push(provider.id)
+        }
         Ok(())
     }
 }
@@ -72,7 +84,7 @@ impl Handler<GetAllJobs> for PosServer {
 }
 
 #[message(result = "Result<Option<Job>>")]
-pub(crate) struct GetJob(u64);
+pub(crate) struct GetJob(pub(crate) u64);
 
 // Returns job with current status for job id
 #[async_trait::async_trait]
@@ -89,7 +101,7 @@ impl Handler<GetJob> for PosServer {
 }
 
 #[message(result = "Result<()>")]
-pub(crate) struct UpdateJobStatus(Job);
+pub(crate) struct UpdateJobStatus(pub(crate) Job);
 
 // Update job status - should only be called from a task which is processing the job
 #[async_trait::async_trait]
@@ -97,12 +109,18 @@ impl Handler<UpdateJobStatus> for PosServer {
     async fn handle(&mut self, _ctx: &mut Context<Self>, msg: UpdateJobStatus) -> Result<()> {
         let updated_job = msg.0;
         if let Some(_) = self.jobs.get(&updated_job.id) {
-            // job is in progress - replace status with updated status
+            // job is running or stopped
+
+            if updated_job.status != JobStatus::Started as i32 {
+                // Job stopped or completed - release provider id of job to pool
+                self.providers_pool.push(updated_job.compute_provider_id);
+            }
+            // update job data
             self.jobs.insert(updated_job.id, updated_job);
         } else if let Some(idx) = self
             .pending_jobs
             .iter()
-            .position(|&j| j.id == updated_job.id)
+            .position(|j| j.id == updated_job.id)
         {
             self.pending_jobs.remove(idx);
             self.pending_jobs.insert(idx, updated_job);
@@ -113,39 +131,82 @@ impl Handler<UpdateJobStatus> for PosServer {
     }
 }
 
-#[message(result = "Result<()>")]
-pub(crate) struct AddJob(Job);
+#[message(result = "Result<Job>")]
+pub(crate) struct AddJob(pub(crate) AddJobRequest);
 
 /// Set the pos compute config
 #[async_trait::async_trait]
 impl Handler<AddJob> for PosServer {
-    async fn handle(&mut self, _ctx: &mut Context<Self>, msg: AddJob) -> Result<()> {
-        let job = msg.0;
-        if self.providers.len() == self.jobs.len() {
+    async fn handle(&mut self, _ctx: &mut Context<Self>, msg: AddJob) -> Result<Job> {
+        let data = msg.0;
+
+        // todo: verify data.post_size is in powers of 2 + below max
+
+        let mut job = Job {
+            id: OsRng.next_u64(),
+            bits_written: 0,
+            size_bits: data.post_size_bits,
+            started: 0,
+            submitted: datetime::Instant::now().seconds() as u64,
+            stopped: 0,
+            status: JobStatus::Queued as i32,
+            last_error: None,
+            friendly_name: data.friendly_name,
+            client_id: data.client_id,
+            proof_of_work_index: u64::MAX,
+            compute_provider_id: u32::MAX,
+        };
+
+        if self.providers_pool.is_empty() {
             // all providers busy with in-progress jobs - queue the job
-            self.pending_jobs.push(job);
+            self.pending_jobs.push(job.clone());
             info!("all providers are busy - queueing job");
-            return Ok(());
+            return Ok(job);
         }
 
-        let _task_job = job.clone();
-        self.jobs.insert(job.id, job);
-
-        // todo: start the job's task here - using tokio blocking spwan task - pass a copy of the job to the task
-        // task uses this system service to call back on progress
-
-        Ok(())
+        let res_job = self.start_task(&job).await?;
+        Ok(res_job)
     }
 }
 
 #[message(result = "Result<(Config)>")]
-pub(crate) struct GetConfig(Config);
+pub(crate) struct GetConfig;
 
 /// Get the current pos compute config
 #[async_trait::async_trait]
 impl Handler<GetConfig> for PosServer {
     async fn handle(&mut self, _ctx: &mut Context<Self>, _msg: GetConfig) -> Result<Config> {
         Ok(self.config.clone())
+    }
+}
+
+#[message(result = "Result<()>")]
+pub(crate) struct AbortJob(pub(crate) AbortJobRequest);
+
+/// Set the pos compute config
+#[async_trait::async_trait]
+impl Handler<AbortJob> for PosServer {
+    async fn handle(&mut self, _ctx: &mut Context<Self>, msg: AbortJob) -> Result<()> {
+        let req = msg.0;
+
+        if let Some(_job) = self.jobs.get(&req.id) {
+            // todo: abort on-going job - need to do this via sending a message the blocking task
+
+            if req.delete_data {
+                // todo: attempt to delete all job files in store (best effort)
+            }
+        }
+
+        if req.delete_job {
+            // remove job
+
+            if let Some(idx) = self.pending_jobs.iter().position(|j| j.id == req.id) {
+                self.pending_jobs.remove(idx);
+            }
+            self.jobs.remove(&req.id);
+        }
+
+        Ok(())
     }
 }
 
