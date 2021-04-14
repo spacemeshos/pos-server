@@ -2,7 +2,7 @@
 
 members = [
     "crates/pos-compute",
-    "crates/pos-server",
+    "crates/pos-service",
     "crates/pos-api"
 ]
 

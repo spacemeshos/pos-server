@@ -63,7 +63,7 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub(crate) async fn start_server(config: Config) -> Result<()> {
+async fn start_server(config: Config) -> Result<()> {
     // init the server (one-time per process, pre config)
     let server = PosServer::from_registry().await?;
     server.call(Init {}).await??;
@@ -100,7 +100,7 @@ pub(crate) async fn start_server(config: Config) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn init_logging() {
+fn init_logging() {
     let mut builder = Builder::new();
 
     builder
@@ -142,7 +142,7 @@ pub(crate) fn init_logging() {
     builder.init();
 }
 
-pub(crate) fn get_default_config() -> config::Config {
+fn get_default_config() -> config::Config {
     let mut config = Config::default();
     config
         .set_default("data_dir", "./pos")

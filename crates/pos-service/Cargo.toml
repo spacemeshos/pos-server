@@ -30,8 +30,4 @@ tonic = "0.4.2"
 tokio = { version = "1", features = ["full"] }
 rand = "0.8.0"
 
-[[bin]]
-path = "src/main.rs"
-name = "post_service"
-
 
