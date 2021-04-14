@@ -5,9 +5,6 @@ authors = ["avive <avive@spacemesh.io>"]
 description = "proof of space compute library"
 edition = "2018"
 
-[build]
-rustflags = ["-L", "./crates/pos-compute/resources"]
-
 [build-dependencies]
 rustc_version = "0.2"
 
