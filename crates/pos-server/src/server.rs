@@ -1,11 +1,9 @@
 use crate::api::pos_grpc_service::PosGrpcService;
 
-use anyhow::bail;
 use anyhow::Result;
-use datetime::Instant;
 use pos_api::api::job::JobStatus;
 use pos_api::api::pos_data_service_server::PosDataServiceServer;
-use pos_api::api::{AbortJobRequest, AddJobRequest, Config, Job, JobError};
+use pos_api::api::{AbortJobRequest, AddJobRequest, Config, Job};
 use pos_compute::{get_providers, PosComputeProvider};
 use rand_core::{OsRng, RngCore};
 use std::collections::HashMap;
@@ -142,7 +140,7 @@ impl Handler<AddJob> for PosServer {
 
         // todo: verify data.post_size is in powers of 2 + below max
 
-        let mut job = Job {
+        let job = Job {
             id: OsRng.next_u64(),
             bits_written: 0,
             size_bits: data.post_size_bits,

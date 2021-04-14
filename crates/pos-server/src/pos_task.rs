@@ -10,7 +10,6 @@ use tokio::task;
 use xactor::*;
 
 use pos_compute::scrypt_positions;
-use std::fs;
 
 impl PosServer {
     /// helper sync function used to update job status via the server service from blocking code
@@ -26,6 +25,14 @@ impl PosServer {
                 .expect("UpdateJobStatus error");
         });
         Ok(())
+    }
+
+    /// Report a task error to the server service
+    fn task_error(job: &mut Job, error: i32, message: String) {
+        job.last_error = Some(JobError { error, message });
+        job.status = JobStatus::Stopped as i32;
+        job.stopped = datetime::Instant::now().seconds() as u64;
+        let _ = PosServer::update_job_status(job);
     }
 
     // Start a pos data file creation task for a job
@@ -77,20 +84,14 @@ impl PosServer {
             let path = Path::new(task_config.data_dir.as_str())
                 .join(Path::new(format!("{}.bin", task_job.id).as_str()));
 
-            let mut file = match File::create(&path) {
+            let file = match File::create(&path) {
                 Ok(file) => file,
                 Err(e) => {
-                    task_job.last_error = Some(JobError {
-                        error: 501,
-                        message: format!(
-                            "error {} creating pos data file at {}.",
-                            path.display(),
-                            e
-                        ),
-                    });
-                    task_job.status = JobStatus::Stopped as i32;
-                    task_job.stopped = datetime::Instant::now().seconds() as u64;
-                    let _ = PosServer::update_job_status(&task_job);
+                    PosServer::task_error(
+                        &mut task_job,
+                        501,
+                        format!("error {} creating pos data file at {}.", path.display(), e),
+                     );
                     return;
                 }
             };
@@ -123,14 +124,7 @@ impl PosServer {
                 );
 
                 if hashes_computed < task_config.indexes_per_compute_cycle {
-                    error!("gpu compute error for job: {}. ", task_job.id);
-
-                    task_job.last_error = Some(JobError {
-                        error: 500,
-                        message: "gpu compute error. Failed to compute all labels".to_string(),
-                    });
-                    task_job.status = JobStatus::Stopped as i32;
-                    task_job.stopped = datetime::Instant::now().seconds() as u64;
+                    PosServer::task_error(&mut task_job, 501, "gpu compute error".into());
                     break;
                 }
 
@@ -141,24 +135,27 @@ impl PosServer {
                         buff_size,
                         path.display()
                     ),
-                    Err(e) => panic!("error writing to pos data file: {} {}", path.display(), e),
+                    Err(e) => {
+                        PosServer::task_error(
+                            &mut task_job,
+                            501,
+                            format!("error writing to pos data file: {} {}", path.display(), e),
+                        );
+                        break;
+                    }
                 }
 
                 task_job.bits_written += bits_per_cycle;
-                PosServer::update_job_status(&task_job);
+                let _ = PosServer::update_job_status(&task_job);
             }
 
-            // todo: do last iteration (if needed)
-
-            // todo: flush file
-            match file_writer.flush() {
-                Err(e) => {
-                    error!("error flushing file {}. {}.", path.display(), e);
-                    // stop the job as it is not completed successfully due to flush error.
-                    task_job.status = JobStatus::Stopped as i32;
-                    task_job.stopped = datetime::Instant::now().seconds() as u64;
-                }
-                Ok(..) => (),
+            if let Err(e) = file_writer.flush() {
+                PosServer::task_error(
+                    &mut task_job,
+                    501,
+                    format!("error flushing pos file {}. {}.", path.display(), e),
+                );
+                return;
             }
 
             if task_job.status == JobStatus::Started as i32 {
