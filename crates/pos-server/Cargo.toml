@@ -19,6 +19,7 @@ nix = "0.19.1"
 getopts = "*"
 clap = "*"
 hex = "*"
+chrono = "*"
 
 xactor = { version = "0.7.11", features = ["runtime-tokio"], default-features = false}
 xactor-derive = "0.7.0"

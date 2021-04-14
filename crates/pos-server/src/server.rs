@@ -37,7 +37,6 @@ impl Default for PosServer {
             pending_jobs: vec![],
             jobs: Default::default(),
             config: Config {
-                // default config
                 data_dir: "./".to_string(),
                 indexes_per_compute_cycle: 9 * 128 * 1024,
                 bits_per_index: 8,
@@ -228,17 +227,14 @@ pub(crate) struct StartGrpcService {
 impl Handler<StartGrpcService> for PosServer {
     async fn handle(&mut self, _ctx: &mut Context<Self>, msg: StartGrpcService) -> Result<()> {
         let addr = format!("{}:{}", msg.host, msg.port).parse().unwrap();
-
-        info!("starting grpc service on: {}", addr);
-
+        info!("starting grpc service on: {}...", addr);
         tokio::task::spawn(async move {
             let res = Server::builder()
                 .add_service(PosDataServiceServer::new(PosGrpcService::default()))
                 .serve(addr)
                 .await;
-
             if res.is_err() {
-                info!("grpc server stopped. {:?}", res.err().unwrap());
+                panic!("grpc server stopped due to error: {:?}", res.err().unwrap());
             } else {
                 info!("grpc server stopped");
             }
