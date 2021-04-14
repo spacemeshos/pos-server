@@ -136,8 +136,8 @@ pub fn do_benchmark() {
     let providers = get_providers();
 
     if providers.len() > 0 {
-        const out_size: usize = (LABELS_COUNT as usize * LABEL_SIZE as usize + 7) / 8;
-        let mut out: [u8; out_size] = [0; out_size];
+        const OUT_SIZE: usize = (LABELS_COUNT as usize * LABEL_SIZE as usize + 7) / 8;
+        let mut out: [u8; OUT_SIZE] = [0; OUT_SIZE];
         for provider in &providers {
             if provider.compute_api as u32 != COMPUTE_API_CLASS_CPU {
                 let mut hashes_computed: u64 = 0;

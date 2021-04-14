@@ -29,7 +29,12 @@ impl PosServer {
 
     /// Report a task error to the server service
     fn task_error(job: &mut Job, error: i32, message: String) {
-        job.last_error = Some(JobError { error, message });
+        let err_msg = format!("job {}: {}", job.id, message);
+        error!("{}", err_msg);
+        job.last_error = Some(JobError {
+            error,
+            message: err_msg,
+        });
         job.status = JobStatus::Stopped as i32;
         job.stopped = datetime::Instant::now().seconds() as u64;
         let _ = PosServer::update_job_status(job);
@@ -63,20 +68,15 @@ impl PosServer {
         self.jobs.insert(job.id, task_job.clone());
         // return job with updated data
         let res_job = task_job.clone();
-
         let task_config = self.config.clone();
-
         let _handle = task::spawn_blocking(move || {
             let bits_per_cycle =
                 task_config.indexes_per_compute_cycle * task_config.bits_per_index as u64;
-
             let iterations = task_job.size_bits / bits_per_cycle;
             let _last_cycle_bits = task_job.size_bits - (iterations * bits_per_cycle);
             let buff_size = (task_config.indexes_per_compute_cycle
                 * task_config.bits_per_index as u64) as usize;
-
             let mut buffer = vec![0_u8; buff_size];
-
             let mut hashes_computed: u64 = 0;
             let mut hashes_per_sec: u64 = 0;
 
@@ -91,7 +91,7 @@ impl PosServer {
                         &mut task_job,
                         501,
                         format!("error {} creating pos data file at {}.", path.display(), e),
-                     );
+                    );
                     return;
                 }
             };

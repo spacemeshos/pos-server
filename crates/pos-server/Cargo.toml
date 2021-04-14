@@ -14,6 +14,7 @@ log = "*"
 env_logger = "*"
 anyhow = "1"
 datetime = "*"
+config = "*"
 xactor = { version = "0.7.11", features = ["runtime-tokio"], default-features = false}
 xactor-derive = "0.7.0"
 async-trait = "0.1.42"
@@ -24,6 +25,7 @@ tonic = "0.3"
 tonic-health = "0.2"
 tokio = {  version = "1.4.0", features = ["full"]}
 clap = "*"
+hex = "*"
 
 [dependencies.rand_core]
 version = "0.5"
