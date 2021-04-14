@@ -29,9 +29,7 @@ const DEFAULT_SALT: &str = "114a00005de29b0aaad6814e5f33d357686da48923e8e4864ee5
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     init_logging();
-
     let mut config = get_default_config();
-
     let args = App::new("Pos Server")
         .version("0.1.0")
         .author("Aviv Eyal <a@spacemesh.io>")
@@ -66,14 +64,13 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 }
 
 pub(crate) async fn start_server(config: Config) -> Result<()> {
-    // init the server
+    // init the server (one-time per process, pre config)
     let server = PosServer::from_registry().await?;
     server.call(Init {}).await??;
 
+    // set server config
     let salt = hex::decode(config.get_str("salt").unwrap()).unwrap();
-
     use pos_api::api::Config;
-
     server
         .call(SetConfig(Config {
             // default config
@@ -105,18 +102,22 @@ pub(crate) async fn start_server(config: Config) -> Result<()> {
 
 pub(crate) fn init_logging() {
     let mut builder = Builder::new();
-    let now: DateTime<Local> = Local::now();
-    let disp = format!("{}", now.to_rfc3339(),);
 
     builder
         .format_level(true)
         .format_timestamp(None)
         .format(move |buf, record| {
             let level_style = buf.default_level_style(record.level());
-            let mut peer_name_style = buf.style();
-            peer_name_style.set_color(Color::Yellow).set_bold(true);
+
+            let now: DateTime<Local> = Local::now();
+            let date_format = format!("{}", now.to_rfc3339(),);
+
+            let mut date_style = buf.style();
+            date_style.set_color(Color::Yellow).set_bold(true);
+
             let mut file_name_style = buf.style();
             file_name_style.set_color(Color::Blue);
+
             let file_name = format!(
                 "{} {}",
                 record.file().unwrap().split('/').last().unwrap(),
@@ -126,7 +127,7 @@ pub(crate) fn init_logging() {
             writeln!(
                 buf,
                 "{} {} {} {}",
-                disp,
+                date_style.value(date_format),
                 level_style.value(record.level()),
                 file_name_style.value(file_name),
                 record.args(),
