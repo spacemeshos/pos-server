@@ -1,5 +1,6 @@
 use crate::api::job::JobStatus;
 use crate::api::Job;
+use anyhow::{bail, Result};
 use chrono::{DateTime, Local, TimeZone};
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -13,6 +14,27 @@ impl Display for JobStatus {
             JobStatus::Completed => "completed",
         };
         write!(f, "{}", str)
+    }
+}
+
+impl Job {
+    /// Validate job data
+    pub fn validate(&self, index_per_compute: u64, label_size: u32) -> Result<()> {
+        if label_size != 8 {
+            // we only support 8 bit labels
+            bail!("only 8 bits label size is supported")
+        }
+        let min_size = index_per_compute * label_size as u64;
+        if self.size_bits < min_size {
+            bail!("pos size is too small. Minimum is {}", min_size)
+        }
+
+        let n: f32 = self.size_bits as f32 / 8.0;
+        if (n - n.round()).abs() > 0.000001 {
+            bail!("only sizes which are multiples of bytes are supported");
+        }
+
+        Ok(())
     }
 }
 

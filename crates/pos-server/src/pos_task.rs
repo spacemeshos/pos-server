@@ -31,7 +31,19 @@ impl PosServer {
     // Start a pos data file creation task for a job
     pub(crate) async fn start_task(&mut self, job: &Job) -> Result<Job> {
         if self.providers_pool.is_empty() {
-            bail!("unexpected condition: no available providers")
+            error!(
+                "unexpected condition: no available provider. can't process job {}",
+                job.id
+            );
+            bail!("no available provider");
+        }
+
+        if let Err(e) = job.validate(
+            self.config.indexes_per_compute_cycle,
+            self.config.bits_per_index,
+        ) {
+            error!("invalid job: {}", e);
+            return Err(e);
         }
 
         let provider_id = self.providers_pool.pop().unwrap();
@@ -47,20 +59,16 @@ impl PosServer {
 
         let task_config = self.config.clone();
 
-        // todo: add task params validation here before starting
-
         let _handle = task::spawn_blocking(move || {
             let bits_per_cycle =
                 task_config.indexes_per_compute_cycle * task_config.bits_per_index as u64;
 
             let iterations = task_job.size_bits / bits_per_cycle;
             let _last_cycle_bits = task_job.size_bits - (iterations * bits_per_cycle);
+            let buff_size = (task_config.indexes_per_compute_cycle
+                * task_config.bits_per_index as u64) as usize;
 
-            let mut buffer = vec![
-                0_u8;
-                (task_config.indexes_per_compute_cycle * task_config.bits_per_index as u64)
-                    as usize
-            ];
+            let mut buffer = vec![0_u8; buff_size];
 
             let mut hashes_computed: u64 = 0;
             let mut hashes_per_sec: u64 = 0;
@@ -71,7 +79,20 @@ impl PosServer {
 
             let mut file = match File::create(&path) {
                 Ok(file) => file,
-                Err(e) => panic!("error creating pos data file {}: {}", path.display(), e),
+                Err(e) => {
+                    task_job.last_error = Some(JobError {
+                        error: 501,
+                        message: format!(
+                            "error {} creating pos data file at {}.",
+                            path.display(),
+                            e
+                        ),
+                    });
+                    task_job.status = JobStatus::Stopped as i32;
+                    task_job.stopped = datetime::Instant::now().seconds() as u64;
+                    let _ = PosServer::update_job_status(&task_job);
+                    return;
+                }
             };
 
             let mut file_writer = BufWriter::new(file);
@@ -81,8 +102,8 @@ impl PosServer {
                 let end_idx = start_idx + task_config.indexes_per_compute_cycle - 1;
 
                 info!(
-                    "job: {}. executing pos iter {} / {} ",
-                    task_job.id, i, iterations
+                    "job: {}. executing pos iter {} / {}, provider: {} ",
+                    task_job.id, i, iterations, task_job.compute_provider_id
                 );
 
                 scrypt_positions(
@@ -106,7 +127,7 @@ impl PosServer {
 
                     task_job.last_error = Some(JobError {
                         error: 500,
-                        message: "gpu compute error".to_string(),
+                        message: "gpu compute error. Failed to compute all labels".to_string(),
                     });
                     task_job.status = JobStatus::Stopped as i32;
                     task_job.stopped = datetime::Instant::now().seconds() as u64;
@@ -114,7 +135,12 @@ impl PosServer {
                 }
 
                 match file_writer.write_all(&buffer) {
-                    Ok(..) => info!("wrote... fix me"),
+                    Ok(..) => info!(
+                        "job {} wrote {} bytes to {}",
+                        task_job.id,
+                        buff_size,
+                        path.display()
+                    ),
                     Err(e) => panic!("error writing to pos data file: {} {}", path.display(), e),
                 }
 
@@ -125,7 +151,15 @@ impl PosServer {
             // todo: do last iteration (if needed)
 
             // todo: flush file
-            file_writer.flush().expect("failed to flush pos data file");
+            match file_writer.flush() {
+                Err(e) => {
+                    error!("error flushing file {}. {}.", path.display(), e);
+                    // stop the job as it is not completed successfully due to flush error.
+                    task_job.status = JobStatus::Stopped as i32;
+                    task_job.stopped = datetime::Instant::now().seconds() as u64;
+                }
+                Ok(..) => (),
+            }
 
             if task_job.status == JobStatus::Started as i32 {
                 // if task was running and didn't stop due to an error then mark it as complete

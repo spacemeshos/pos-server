@@ -127,7 +127,7 @@ pub fn scrypt_positions(
 ////////////////////////////////////////////
 // Utility functions and helpers below
 
-const LABEL_SIZE: u32 = 1;
+const LABEL_SIZE: u32 = 8;
 const LABELS_COUNT: u64 = 9 * 128 * 1024;
 
 pub fn do_benchmark() {
