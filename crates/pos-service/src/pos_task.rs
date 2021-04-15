@@ -69,6 +69,9 @@ impl PosServer {
         // return job with updated data
         let res_job = task_job.clone();
         let task_config = self.config.clone();
+
+        info!("starting task for job {}...", task_job.id);
+
         let _handle = task::spawn_blocking(move || {
             let bits_per_cycle =
                 task_config.indexes_per_compute_cycle * task_config.bits_per_index as u64;
@@ -104,7 +107,10 @@ impl PosServer {
 
                 info!(
                     "job: {}. executing pos iter {} / {}, provider: {} ",
-                    task_job.id, i, iterations, task_job.compute_provider_id
+                    task_job.id,
+                    i + 1,
+                    iterations,
+                    task_job.compute_provider_id
                 );
 
                 scrypt_positions(
@@ -149,6 +155,8 @@ impl PosServer {
                 let _ = PosServer::update_job_status(&task_job);
             }
 
+            info!("compute finished {}", task_job.id);
+
             if let Err(e) = file_writer.flush() {
                 PosServer::task_error(
                     &mut task_job,
@@ -159,6 +167,7 @@ impl PosServer {
             }
 
             if task_job.status == JobStatus::Started as i32 {
+                info!("job completed {}", task_job.id);
                 // if task was running and didn't stop due to an error then mark it as complete
                 task_job.status = JobStatus::Completed as i32;
                 task_job.stopped = datetime::Instant::now().seconds() as u64;

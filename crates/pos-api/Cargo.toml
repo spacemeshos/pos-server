@@ -6,7 +6,7 @@ description = "proof of space server api"
 edition = "2018"
 
 [build-dependencies]
-tonic-build = "0.3"
+tonic-build = "0.4.2"
 
 [dependencies]
 prost = "0.7"
@@ -14,3 +14,4 @@ tonic = "0.4.2"
 chrono = "*"
 hex = "*"
 anyhow = "*"
+

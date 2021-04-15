@@ -65,8 +65,9 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
 async fn start_server(config: Config) -> Result<()> {
     // init the server (one-time per process, pre config)
+    let use_cpu_providers = config.get_bool("use_cpu_providers").unwrap();
     let server = PosServer::from_registry().await?;
-    server.call(Init {}).await??;
+    server.call(Init { use_cpu_providers }).await??;
 
     // set server config
     let salt = hex::decode(config.get_str("salt").unwrap()).unwrap();
@@ -93,7 +94,7 @@ async fn start_server(config: Config) -> Result<()> {
         })
         .await??;
 
-    info!("server running.");
+    info!("server running");
 
     // do_providers_list();
     //do_benchmark();
@@ -145,7 +146,7 @@ fn init_logging() {
 fn get_default_config() -> config::Config {
     let mut config = Config::default();
     config
-        .set_default("data_dir", "./pos")
+        .set_default("data_dir", "./")
         .unwrap()
         .set_default("log_file", "./log.txt")
         .unwrap()
@@ -164,6 +165,8 @@ fn get_default_config() -> config::Config {
         .set_default("r", 1.to_string())
         .unwrap()
         .set_default("p", 1.to_string())
+        .unwrap()
+        .set_default("use_cpu_providers", false.to_string())
         .unwrap()
         .clone()
 }

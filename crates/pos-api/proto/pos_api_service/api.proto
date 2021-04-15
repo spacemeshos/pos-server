@@ -4,6 +4,8 @@ package api;
 // A proof of space data creation service
 service PosDataService {
 
+  rpc GetProviders(GetProvidersRequest) returns (GetProvidersResponse);
+
   // Set service global config
   rpc SetConfig(SetConfigRequest) returns (SetConfigResponse);
 
@@ -23,7 +25,7 @@ service PosDataService {
   rpc AbortJob(AbortJobRequest) returns (AbortJobResponse);
 
   // Subscribe to stream of Job status updates for a specific Job or for all Jobs
-  // rpc SubscribeJobStatusStream(JobStatusStreamRequest) returns (stream JobStatusStreamResponse);
+  rpc SubscribeJobStatusStream(JobStatusStreamRequest) returns (stream JobStatusStreamResponse);
 }
 
 // Service global configuration
@@ -37,6 +39,26 @@ message Config {
   uint32 N = 5; // scrypt param
   uint32 R = 6; // scrypt param
   uint32 P = 7; // scrypt param
+}
+
+
+message Provider {
+  uint32 id = 1;
+  string model = 2;
+  enum Class {
+    CUDA = 0;
+    VULKAN = 1;
+    X86 = 2;
+  }
+  Class class = 3;
+}
+
+message GetProvidersRequest {
+
+}
+
+message GetProvidersResponse {
+  repeated Provider providers = 1;
 }
 
 message GetConfigRequest {

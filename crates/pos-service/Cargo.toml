@@ -20,7 +20,6 @@ getopts = "*"
 clap = "*"
 hex = "*"
 chrono = "*"
-
 xactor = { version = "0.7.11", features = ["runtime-tokio"], default-features = false}
 xactor-derive = "0.7.0"
 async-trait = "0.1.42"
@@ -28,6 +27,7 @@ futures = "0.3"
 prost = "0.7"
 tonic = "0.4.2"
 tokio = { version = "1", features = ["full"] }
+tokio-stream = "*"
 rand = "0.8.0"
 
 

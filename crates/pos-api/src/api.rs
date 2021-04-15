@@ -3,7 +3,7 @@
 pub struct Config {
     /// path accessible by server to create pos data on. Each post is created in a dir named with the job id. e.g. /pos_store/1234/
     #[prost(string, tag = "1")]
-    pub data_dir: std::string::String,
+    pub data_dir: ::prost::alloc::string::String,
     /// add all other configs here
     ///
     /// number of indexes to compute per gpu compute cycle. e.g. 1024^4
@@ -13,8 +13,8 @@ pub struct Config {
     #[prost(uint32, tag = "3")]
     pub bits_per_index: u32,
     /// scrypt salt
-    #[prost(bytes, tag = "4")]
-    pub salt: std::vec::Vec<u8>,
+    #[prost(bytes = "vec", tag = "4")]
+    pub salt: ::prost::alloc::vec::Vec<u8>,
     /// scrypt param
     #[prost(uint32, tag = "5")]
     pub n: u32,
@@ -26,16 +26,42 @@ pub struct Config {
     pub p: u32,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Provider {
+    #[prost(uint32, tag = "1")]
+    pub id: u32,
+    #[prost(string, tag = "2")]
+    pub model: ::prost::alloc::string::String,
+    #[prost(enumeration = "provider::Class", tag = "3")]
+    pub class: i32,
+}
+/// Nested message and enum types in `Provider`.
+pub mod provider {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+    #[repr(i32)]
+    pub enum Class {
+        Cuda = 0,
+        Vulkan = 1,
+        X86 = 2,
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetProvidersRequest {}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetProvidersResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub providers: ::prost::alloc::vec::Vec<Provider>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetConfigRequest {}
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetConfigResponse {
     #[prost(message, optional, tag = "1")]
-    pub config: ::std::option::Option<Config>,
+    pub config: ::core::option::Option<Config>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SetConfigRequest {
     #[prost(message, optional, tag = "1")]
-    pub config: ::std::option::Option<Config>,
+    pub config: ::core::option::Option<Config>,
 }
 /// status code
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -49,7 +75,7 @@ pub struct JobStatusStreamRequest {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct JobStatusStreamResponse {
     #[prost(message, optional, tag = "1")]
-    pub job: ::std::option::Option<Job>,
+    pub job: ::core::option::Option<Job>,
 }
 /// A proof of space generation Job
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -76,13 +102,13 @@ pub struct Job {
     pub status: i32,
     /// last error string if Job stopped or empty
     #[prost(message, optional, tag = "10")]
-    pub last_error: ::std::option::Option<JobError>,
+    pub last_error: ::core::option::Option<JobError>,
     /// client provided friendly name
     #[prost(string, tag = "11")]
-    pub friendly_name: std::string::String,
+    pub friendly_name: ::prost::alloc::string::String,
     /// unique client id (input to post)
-    #[prost(bytes, tag = "12")]
-    pub client_id: std::vec::Vec<u8>,
+    #[prost(bytes = "vec", tag = "12")]
+    pub client_id: ::prost::alloc::vec::Vec<u8>,
     /// index of the pow solution index (only for complete Jobs
     #[prost(uint64, tag = "13")]
     pub proof_of_work_index: u64,
@@ -90,6 +116,7 @@ pub struct Job {
     #[prost(uint32, tag = "14")]
     pub compute_provider_id: u32,
 }
+/// Nested message and enum types in `Job`.
 pub mod job {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
@@ -109,8 +136,9 @@ pub struct JobError {
     #[prost(enumeration = "job_error::Error", tag = "1")]
     pub error: i32,
     #[prost(string, tag = "2")]
-    pub message: std::string::String,
+    pub message: ::prost::alloc::string::String,
 }
+/// Nested message and enum types in `JobError`.
 pub mod job_error {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
@@ -140,7 +168,7 @@ pub struct GetAllJobsStatusRequest {}
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetAllJobsStatusResponse {
     #[prost(message, repeated, tag = "1")]
-    pub jobs: ::std::vec::Vec<Job>,
+    pub jobs: ::prost::alloc::vec::Vec<Job>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetJobStatusRequest {
@@ -150,13 +178,13 @@ pub struct GetJobStatusRequest {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetJobStatusResponse {
     #[prost(message, optional, tag = "1")]
-    pub job: ::std::option::Option<Job>,
+    pub job: ::core::option::Option<Job>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AddJobRequest {
     /// unique client id (input to post)
-    #[prost(bytes, tag = "1")]
-    pub client_id: std::vec::Vec<u8>,
+    #[prost(bytes = "vec", tag = "1")]
+    pub client_id: ::prost::alloc::vec::Vec<u8>,
     /// requested post size in bits
     #[prost(uint64, tag = "2")]
     pub post_size_bits: u64,
@@ -165,12 +193,12 @@ pub struct AddJobRequest {
     pub start_index: u64,
     /// friendly name set by client to identify Job later
     #[prost(string, tag = "4")]
-    pub friendly_name: std::string::String,
+    pub friendly_name: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AddJobResponse {
     #[prost(message, optional, tag = "1")]
-    pub job: ::std::option::Option<Job>,
+    pub job: ::core::option::Option<Job>,
 }
 #[doc = r" Generated client implementations."]
 pub mod pos_data_service_client {
@@ -205,6 +233,20 @@ pub mod pos_data_service_client {
         pub fn with_interceptor(inner: T, interceptor: impl Into<tonic::Interceptor>) -> Self {
             let inner = tonic::client::Grpc::with_interceptor(inner, interceptor);
             Self { inner }
+        }
+        pub async fn get_providers(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GetProvidersRequest>,
+        ) -> Result<tonic::Response<super::GetProvidersResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/api.PosDataService/GetProviders");
+            self.inner.unary(request.into_request(), path, codec).await
         }
         #[doc = " Set service global config"]
         pub async fn set_config(
@@ -297,6 +339,28 @@ pub mod pos_data_service_client {
             let path = http::uri::PathAndQuery::from_static("/api.PosDataService/AbortJob");
             self.inner.unary(request.into_request(), path, codec).await
         }
+        #[doc = " Subscribe to stream of Job status updates for a specific Job or for all Jobs"]
+        pub async fn subscribe_job_status_stream(
+            &mut self,
+            request: impl tonic::IntoRequest<super::JobStatusStreamRequest>,
+        ) -> Result<
+            tonic::Response<tonic::codec::Streaming<super::JobStatusStreamResponse>>,
+            tonic::Status,
+        > {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/api.PosDataService/SubscribeJobStatusStream",
+            );
+            self.inner
+                .server_streaming(request.into_request(), path, codec)
+                .await
+        }
     }
     impl<T: Clone> Clone for PosDataServiceClient<T> {
         fn clone(&self) -> Self {
@@ -318,6 +382,10 @@ pub mod pos_data_service_server {
     #[doc = "Generated trait containing gRPC methods that should be implemented for use with PosDataServiceServer."]
     #[async_trait]
     pub trait PosDataService: Send + Sync + 'static {
+        async fn get_providers(
+            &self,
+            request: tonic::Request<super::GetProvidersRequest>,
+        ) -> Result<tonic::Response<super::GetProvidersResponse>, tonic::Status>;
         #[doc = " Set service global config"]
         async fn set_config(
             &self,
@@ -348,6 +416,16 @@ pub mod pos_data_service_server {
             &self,
             request: tonic::Request<super::AbortJobRequest>,
         ) -> Result<tonic::Response<super::AbortJobResponse>, tonic::Status>;
+        #[doc = "Server streaming response type for the SubscribeJobStatusStream method."]
+        type SubscribeJobStatusStreamStream: futures_core::Stream<Item = Result<super::JobStatusStreamResponse, tonic::Status>>
+            + Send
+            + Sync
+            + 'static;
+        #[doc = " Subscribe to stream of Job status updates for a specific Job or for all Jobs"]
+        async fn subscribe_job_status_stream(
+            &self,
+            request: tonic::Request<super::JobStatusStreamRequest>,
+        ) -> Result<tonic::Response<Self::SubscribeJobStatusStreamStream>, tonic::Status>;
     }
     #[doc = " A proof of space data creation service"]
     #[derive(Debug)]
@@ -382,6 +460,39 @@ pub mod pos_data_service_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
+                "/api.PosDataService/GetProviders" => {
+                    #[allow(non_camel_case_types)]
+                    struct GetProvidersSvc<T: PosDataService>(pub Arc<T>);
+                    impl<T: PosDataService> tonic::server::UnaryService<super::GetProvidersRequest>
+                        for GetProvidersSvc<T>
+                    {
+                        type Response = super::GetProvidersResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::GetProvidersRequest>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move { (*inner).get_providers(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let interceptor = inner.1.clone();
+                        let inner = inner.0;
+                        let method = GetProvidersSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = if let Some(interceptor) = interceptor {
+                            tonic::server::Grpc::with_interceptor(codec, interceptor)
+                        } else {
+                            tonic::server::Grpc::new(codec)
+                        };
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
                 "/api.PosDataService/SetConfig" => {
                     #[allow(non_camel_case_types)]
                     struct SetConfigSvc<T: PosDataService>(pub Arc<T>);
@@ -573,10 +684,48 @@ pub mod pos_data_service_server {
                     };
                     Box::pin(fut)
                 }
+                "/api.PosDataService/SubscribeJobStatusStream" => {
+                    #[allow(non_camel_case_types)]
+                    struct SubscribeJobStatusStreamSvc<T: PosDataService>(pub Arc<T>);
+                    impl<T: PosDataService>
+                        tonic::server::ServerStreamingService<super::JobStatusStreamRequest>
+                        for SubscribeJobStatusStreamSvc<T>
+                    {
+                        type Response = super::JobStatusStreamResponse;
+                        type ResponseStream = T::SubscribeJobStatusStreamStream;
+                        type Future =
+                            BoxFuture<tonic::Response<Self::ResponseStream>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::JobStatusStreamRequest>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut =
+                                async move { (*inner).subscribe_job_status_stream(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let interceptor = inner.1;
+                        let inner = inner.0;
+                        let method = SubscribeJobStatusStreamSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = if let Some(interceptor) = interceptor {
+                            tonic::server::Grpc::with_interceptor(codec, interceptor)
+                        } else {
+                            tonic::server::Grpc::new(codec)
+                        };
+                        let res = grpc.server_streaming(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
                 _ => Box::pin(async move {
                     Ok(http::Response::builder()
                         .status(200)
                         .header("grpc-status", "12")
+                        .header("content-type", "application/grpc")
                         .body(tonic::body::BoxBody::empty())
                         .unwrap())
                 }),

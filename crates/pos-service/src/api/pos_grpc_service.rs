@@ -1,14 +1,16 @@
 use crate::pos_api::api::pos_data_service_server::PosDataService;
+use crate::server::{
+    AbortJob, AddJob, GetAllJobs, GetAllProviders, GetConfig, GetJob, PosServer, SetConfig,
+    SubscribeToJobStatuses,
+};
 use anyhow::Result;
 use pos_api::api::{
     AbortJobRequest, AbortJobResponse, AddJobRequest, AddJobResponse, GetAllJobsStatusRequest,
     GetAllJobsStatusResponse, GetConfigRequest, GetConfigResponse, GetJobStatusRequest,
-    GetJobStatusResponse, Job, SetConfigRequest, SetConfigResponse,
+    GetJobStatusResponse, GetProvidersRequest, GetProvidersResponse, Job, JobStatusStreamRequest,
+    JobStatusStreamResponse, Provider, SetConfigRequest, SetConfigResponse,
 };
-// use futures::Stream;
-// use tokio::sync::mpsc;
-
-use crate::server::{AbortJob, AddJob, GetAllJobs, GetConfig, GetJob, PosServer, SetConfig};
+use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 use xactor::*;
 
@@ -26,6 +28,23 @@ impl PosGrpcService {}
 
 #[tonic::async_trait]
 impl PosDataService for PosGrpcService {
+    async fn get_providers(
+        &self,
+        _request: Request<GetProvidersRequest>,
+    ) -> Result<Response<GetProvidersResponse>, Status> {
+        let server = PosServer::from_registry()
+            .await
+            .map_err(|e| Status::internal(format!("internal error: {}", e)))?;
+
+        let providers: Vec<Provider> = server
+            .call(GetAllProviders {})
+            .await
+            .map_err(|e| Status::internal(format!("internal error: {}", e)))?
+            .map_err(|e| Status::internal(format!("internal error: {}", e)))?;
+
+        Ok(Response::new(GetProvidersResponse { providers }))
+    }
+
     async fn set_config(
         &self,
         request: Request<SetConfigRequest>,
@@ -137,5 +156,24 @@ impl PosDataService for PosGrpcService {
             .map_err(|e| Status::internal(format!("internal error: {}", e)))?;
 
         Ok(Response::new(AbortJobResponse {}))
+    }
+
+    type SubscribeJobStatusStreamStream = ReceiverStream<Result<JobStatusStreamResponse, Status>>;
+
+    async fn subscribe_job_status_stream(
+        &self,
+        _request: Request<JobStatusStreamRequest>,
+    ) -> Result<Response<Self::SubscribeJobStatusStreamStream>, Status> {
+        let server = PosServer::from_registry()
+            .await
+            .map_err(|e| Status::internal(format!("internal error: {}", e)))?;
+
+        let resp: Self::SubscribeJobStatusStreamStream = server
+            .call(SubscribeToJobStatuses {})
+            .await
+            .map_err(|e| Status::internal(format!("internal error: {}", e)))?
+            .map_err(|e| Status::internal(format!("internal error: {}", e)))?;
+
+        Ok(Response::new(resp))
     }
 }

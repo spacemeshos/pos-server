@@ -4,10 +4,16 @@ use crate::{DEFAULT_BITS_PER_INDEX, DEFAULT_INDEXED_PER_CYCLE, DEFAULT_SALT};
 use anyhow::Result;
 use pos_api::api::job::JobStatus;
 use pos_api::api::pos_data_service_server::PosDataServiceServer;
-use pos_api::api::{AbortJobRequest, AddJobRequest, Config, Job};
-use pos_compute::{get_providers, PosComputeProvider};
+use pos_api::api::{
+    AbortJobRequest, AddJobRequest, Config, Job, JobStatusStreamResponse, Provider,
+};
+use pos_compute::{get_providers, PosComputeProvider, COMPUTE_API_CLASS_CPU};
 use std::collections::HashMap;
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::Sender;
+use tokio_stream::wrappers::ReceiverStream;
 use tonic::transport::Server;
+use tonic::Status;
 use xactor::*;
 
 pub(crate) struct PosServer {
@@ -16,6 +22,7 @@ pub(crate) struct PosServer {
     pub(crate) jobs: HashMap<u64, Job>,  // in progress
     pub(crate) config: Config,           // compute config
     pub(crate) providers_pool: Vec<u32>, // idle providers
+    job_status_subscriber: Vec<Sender<Result<JobStatusStreamResponse, Status>>>,
 }
 
 #[async_trait::async_trait]
@@ -47,21 +54,53 @@ impl Default for PosServer {
                 p: 1,
             },
             providers_pool: vec![],
+            job_status_subscriber: vec![],
         }
     }
 }
+
 #[message(result = "Result<()>")]
-pub(crate) struct Init {}
+pub(crate) struct Init {
+    /// server config - must be set when initializing
+    pub(crate) use_cpu_providers: bool,
+}
 
 /// Init the service
 #[async_trait::async_trait]
 impl Handler<Init> for PosServer {
-    async fn handle(&mut self, _ctx: &mut Context<Self>, _msg: Init) -> Result<()> {
-        self.providers = get_providers();
-        for provider in self.providers.iter() {
-            self.providers_pool.push(provider.id)
+    async fn handle(&mut self, _ctx: &mut Context<Self>, msg: Init) -> Result<()> {
+        for p in get_providers() {
+            if !msg.use_cpu_providers && p.compute_api == COMPUTE_API_CLASS_CPU {
+                // skip cpu provider
+                continue;
+            }
+            self.providers_pool.push(p.id);
+            self.providers.push(p);
         }
         Ok(())
+    }
+}
+
+#[message(result = "Result<Vec<Provider>>")]
+pub(crate) struct GetAllProviders;
+
+// Returns all system providers
+#[async_trait::async_trait]
+impl Handler<GetAllProviders> for PosServer {
+    async fn handle(
+        &mut self,
+        _ctx: &mut Context<Self>,
+        _msg: GetAllProviders,
+    ) -> Result<Vec<Provider>> {
+        let mut res = vec![];
+        for p in self.providers.iter() {
+            res.push(Provider {
+                id: p.id,
+                model: p.model.clone(),
+                class: p.compute_api as i32,
+            })
+        }
+        Ok(res)
     }
 }
 
@@ -113,17 +152,35 @@ impl Handler<UpdateJobStatus> for PosServer {
                 self.providers_pool.push(updated_job.compute_provider_id);
             }
             // update job data
-            self.jobs.insert(updated_job.id, updated_job);
+            self.jobs.insert(updated_job.id, updated_job.clone());
         } else if let Some(idx) = self
             .pending_jobs
             .iter()
             .position(|j| j.id == updated_job.id)
         {
             self.pending_jobs.remove(idx);
-            self.pending_jobs.insert(idx, updated_job);
+            self.pending_jobs.insert(idx, updated_job.clone());
         } else {
             error!("unrecognized job")
         }
+
+        // update all job status subscribers
+        for sub in self.job_status_subscriber.iter() {
+            let res = sub
+                .send(Ok(JobStatusStreamResponse {
+                    job: Some(updated_job.clone()),
+                }))
+                .await;
+
+            match res {
+                Ok(()) => info!("sent updated job status to subscriber"),
+                Err(e) => {
+                    // todo: if error then remove subscriber from state
+                    error!("failed to send updated job status to subscriber: {}", e)
+                }
+            }
+        }
+
         Ok(())
     }
 }
@@ -218,6 +275,31 @@ impl Handler<SetConfig> for PosServer {
         Ok(())
     }
 }
+
+///////////////////////////////////
+
+#[message(result = "Result<ReceiverStream<Result<JobStatusStreamResponse, Status>>>")]
+pub(crate) struct SubscribeToJobStatuses {}
+
+#[async_trait::async_trait]
+impl Handler<SubscribeToJobStatuses> for PosServer {
+    async fn handle(
+        &mut self,
+        _ctx: &mut Context<Self>,
+        _msg: SubscribeToJobStatuses,
+    ) -> Result<ReceiverStream<Result<JobStatusStreamResponse, Status>>> {
+        // create channel for streaming job statuses
+        let (tx, rx) = mpsc::channel(32);
+
+        // store the sender
+        self.job_status_subscriber.push(tx);
+
+        // return the receiver
+        Ok(ReceiverStream::new(rx))
+    }
+}
+
+/////////////////////////////////////////////
 
 #[message(result = "Result<()>")]
 pub(crate) struct StartGrpcService {
