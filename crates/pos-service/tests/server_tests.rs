@@ -26,11 +26,14 @@ impl Drop for Guard {
     }
 }
 
+use pos_api::api::job::JobStatus;
 use pos_api::api::pos_data_service_client::PosDataServiceClient;
-use pos_api::api::{AddJobRequest, GetConfigRequest, GetProvidersRequest};
+use pos_api::api::{AddJobRequest, GetConfigRequest, GetProvidersRequest, JobStatusStreamRequest};
+use std::convert::TryInto;
+use tokio_stream::StreamExt;
 
 #[tokio::test]
-async fn test_api() {
+async fn simple_job_test() {
     let _ = env_logger::builder()
         .is_test(false)
         .filter_level(LevelFilter::Info)
@@ -70,6 +73,13 @@ async fn test_api() {
         info!("Provider: {}", p)
     }
 
+    // subscribe to all jobs statuses
+    let mut receiver = api_client
+        .subscribe_job_status_stream(JobStatusStreamRequest { id: 0 })
+        .await
+        .unwrap()
+        .into_inner();
+
     let resp = api_client
         .add_job(AddJobRequest {
             client_id,
@@ -84,13 +94,33 @@ async fn test_api() {
     let job = resp.job.unwrap();
     info!("job info: {}", job);
 
-    // todo: subscribe to stream
-
-    // wait for ctrl-c
-
-    tokio::signal::ctrl_c()
-        .await
-        .expect("failed to listen for ctrl-c signal");
+    while let Some(res) = receiver.next().await {
+        match res {
+            Ok(job_status) => {
+                let job = job_status.job.unwrap();
+                info!(
+                    "job {}/{}. {} / {} ",
+                    job.id, job.friendly_name, job.bits_written, job.size_bits,
+                );
+                match job.status.try_into().unwrap() {
+                    JobStatus::Completed => {
+                        info!("🎉 job completed!");
+                        break;
+                    }
+                    JobStatus::Stopped => {
+                        panic!("💥 job stopped due to error")
+                    }
+                    JobStatus::Queued => {
+                        info!("job queued");
+                    }
+                    JobStatus::Started => {
+                        info!("job in progress...");
+                    }
+                }
+            }
+            Err(e) => panic!("💥 server error {}", e),
+        }
+    }
 
     info!("{}", guard.0.id());
 }

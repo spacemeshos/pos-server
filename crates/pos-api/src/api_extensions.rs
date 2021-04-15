@@ -2,6 +2,7 @@ use crate::api::job::JobStatus;
 use crate::api::{Job, Provider};
 use anyhow::{bail, Result};
 use chrono::{DateTime, Local, TimeZone};
+use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
@@ -16,6 +17,19 @@ fn get_provider_class_string(class: u32) -> &'static str {
         COMPUTE_API_CLASS_CUDA => "CUDA",
         COMPUTE_API_CLASS_VULKAN => "VULKAN",
         _ => "INVALID",
+    }
+}
+
+impl TryFrom<i32> for JobStatus {
+    type Error = ();
+    fn try_from(v: i32) -> Result<Self, Self::Error> {
+        match v {
+            x if x == JobStatus::Started as i32 => Ok(JobStatus::Started),
+            x if x == JobStatus::Queued as i32 => Ok(JobStatus::Queued),
+            x if x == JobStatus::Stopped as i32 => Ok(JobStatus::Stopped),
+            x if x == JobStatus::Completed as i32 => Ok(JobStatus::Completed),
+            _ => Err(()),
+        }
     }
 }
 

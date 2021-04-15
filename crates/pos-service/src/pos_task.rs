@@ -83,9 +83,9 @@ impl PosServer {
             let mut hashes_computed: u64 = 0;
             let mut hashes_per_sec: u64 = 0;
 
-            // for now we create file called <job_id>.bin in the dest data folder
+            // for now we create file called <job_id>.pos in the dest data folder
             let path = Path::new(task_config.data_dir.as_str())
-                .join(Path::new(format!("{}.bin", task_job.id).as_str()));
+                .join(Path::new(format!("{}.pos", task_job.id).as_str()));
 
             let file = match File::create(&path) {
                 Ok(file) => file,

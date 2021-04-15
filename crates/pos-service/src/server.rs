@@ -22,7 +22,7 @@ pub(crate) struct PosServer {
     pub(crate) jobs: HashMap<u64, Job>,  // in progress
     pub(crate) config: Config,           // compute config
     pub(crate) providers_pool: Vec<u32>, // idle providers
-    job_status_subscriber: Vec<Sender<Result<JobStatusStreamResponse, Status>>>,
+    job_status_subscribers: HashMap<u64, Sender<Result<JobStatusStreamResponse, Status>>>,
 }
 
 #[async_trait::async_trait]
@@ -54,7 +54,7 @@ impl Default for PosServer {
                 p: 1,
             },
             providers_pool: vec![],
-            job_status_subscriber: vec![],
+            job_status_subscribers: HashMap::default(),
         }
     }
 }
@@ -165,8 +165,9 @@ impl Handler<UpdateJobStatus> for PosServer {
         }
 
         // update all job status subscribers
-        for sub in self.job_status_subscriber.iter() {
+        for sub in self.job_status_subscribers.clone().iter() {
             let res = sub
+                .1
                 .send(Ok(JobStatusStreamResponse {
                     job: Some(updated_job.clone()),
                 }))
@@ -175,8 +176,11 @@ impl Handler<UpdateJobStatus> for PosServer {
             match res {
                 Ok(()) => info!("sent updated job status to subscriber"),
                 Err(e) => {
-                    // todo: if error then remove subscriber from state
-                    error!("failed to send updated job status to subscriber: {}", e)
+                    error!(
+                        "failed to send updated job status to subscriber. deleting it: {}",
+                        e
+                    );
+                    self.job_status_subscribers.remove(sub.0);
                 }
             }
         }
@@ -276,7 +280,7 @@ impl Handler<SetConfig> for PosServer {
     }
 }
 
-///////////////////////////////////
+/////////////////////////////////////////////
 
 #[message(result = "Result<ReceiverStream<Result<JobStatusStreamResponse, Status>>>")]
 pub(crate) struct SubscribeToJobStatuses {}
@@ -291,8 +295,8 @@ impl Handler<SubscribeToJobStatuses> for PosServer {
         // create channel for streaming job statuses
         let (tx, rx) = mpsc::channel(32);
 
-        // store the sender
-        self.job_status_subscriber.push(tx);
+        // store the sender indexed by a new unique id
+        self.job_status_subscribers.insert(rand::random(), tx);
 
         // return the receiver
         Ok(ReceiverStream::new(rx))
