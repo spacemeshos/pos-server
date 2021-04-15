@@ -8,10 +8,15 @@ use log::LevelFilter;
 use nix::sys::signal;
 use nix::sys::signal::Signal;
 use nix::unistd::Pid;
+use pos_api::api::job::JobStatus;
+use pos_api::api::pos_data_service_client::PosDataServiceClient;
+use pos_api::api::{AddJobRequest, GetConfigRequest, GetProvidersRequest, JobStatusStreamRequest};
+use std::convert::TryInto;
 use std::env;
 use std::process::{Child, Command};
 use std::time::Duration;
 use tokio::time::sleep;
+use tokio_stream::StreamExt;
 
 struct Guard(Child);
 
@@ -25,12 +30,6 @@ impl Drop for Guard {
         }
     }
 }
-
-use pos_api::api::job::JobStatus;
-use pos_api::api::pos_data_service_client::PosDataServiceClient;
-use pos_api::api::{AddJobRequest, GetConfigRequest, GetProvidersRequest, JobStatusStreamRequest};
-use std::convert::TryInto;
-use tokio_stream::StreamExt;
 
 #[tokio::test]
 async fn simple_job_test() {
@@ -99,8 +98,12 @@ async fn simple_job_test() {
             Ok(job_status) => {
                 let job = job_status.job.unwrap();
                 info!(
-                    "job {}/{}. {} / {} ",
-                    job.id, job.friendly_name, job.bits_written, job.size_bits,
+                    "job {}/{}. gpu_id: {}. {}/{} bits.",
+                    job.id,
+                    job.friendly_name,
+                    job.compute_provider_id,
+                    job.bits_written,
+                    job.size_bits,
                 );
                 match job.status.try_into().unwrap() {
                     JobStatus::Completed => {
