@@ -1,5 +1,6 @@
 use crate::api::pos_grpc_service::PosGrpcService;
 
+use crate::{DEFAULT_BITS_PER_INDEX, DEFAULT_INDEXED_PER_CYCLE, DEFAULT_SALT};
 use anyhow::Result;
 use pos_api::api::job::JobStatus;
 use pos_api::api::pos_data_service_server::PosDataServiceServer;
@@ -38,9 +39,9 @@ impl Default for PosServer {
             jobs: Default::default(),
             config: Config {
                 data_dir: "./".to_string(),
-                indexes_per_compute_cycle: 9 * 128 * 1024,
-                bits_per_index: 8,
-                salt: vec![],
+                indexes_per_compute_cycle: DEFAULT_INDEXED_PER_CYCLE,
+                bits_per_index: DEFAULT_BITS_PER_INDEX,
+                salt: hex::decode(DEFAULT_SALT).unwrap(),
                 n: 512,
                 r: 1,
                 p: 1,
