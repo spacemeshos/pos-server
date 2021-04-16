@@ -103,11 +103,17 @@ impl Display for Job {
 
         if self.status == JobStatus::Completed as i32 {
             let time = stopped.sub(started);
-            write!(
-                f,
-                "Completed. work duration: {} (secs). ",
-                time.num_seconds()
-            )?;
+            if time.num_seconds() == 0 {
+                write!(f, "Completed in less than 1 second.",)?;
+            } else {
+                let bytes_per_sec = self.size_bits / (time.num_seconds() as u64 * 8);
+                write!(
+                    f,
+                    "Completed. work duration: {} Secs. Bytes/sec: {}. ",
+                    time.num_seconds(),
+                    bytes_per_sec
+                )?;
+            }
         }
 
         write!(f, "data written (bits): {}. ", self.bits_written)?;

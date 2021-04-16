@@ -40,7 +40,7 @@ impl PosServer {
         let _ = PosServer::update_job_status(job);
     }
 
-    // Start a pos data file creation task for a job
+    /// Start a pos data file creation task for a job
     pub(crate) async fn start_task(&mut self, job: &Job) -> Result<Job> {
         if self.providers_pool.is_empty() {
             error!(
@@ -72,11 +72,11 @@ impl PosServer {
 
         info!("starting task for job {}...", task_job.id);
 
+        // span a blocking task since the compute lib computation is blocking
         let _handle = task::spawn_blocking(move || {
             let bits_per_cycle =
                 task_config.indexes_per_compute_cycle * task_config.bits_per_index as u64;
             let iterations = task_job.size_bits / bits_per_cycle;
-            let _last_cycle_bits = task_job.size_bits - (iterations * bits_per_cycle);
             let buff_size = (task_config.indexes_per_compute_cycle
                 * task_config.bits_per_index as u64) as usize;
             let mut buffer = vec![0_u8; buff_size];
@@ -106,11 +106,13 @@ impl PosServer {
                 let end_idx = start_idx + task_config.indexes_per_compute_cycle - 1;
 
                 info!(
-                    "job: {}. executing pos iter {} / {}, provider: {} ",
+                    "job: {}. executing pos iter {} / {}, provider: {}. start_idx: {}, end_idx: {}",
                     task_job.id,
                     i + 1,
                     iterations,
-                    task_job.compute_provider_id
+                    task_job.compute_provider_id,
+                    start_idx,
+                    end_idx
                 );
 
                 scrypt_positions(
