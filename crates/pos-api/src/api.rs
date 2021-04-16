@@ -204,7 +204,6 @@ pub struct AddJobResponse {
 pub mod pos_data_service_client {
     #![allow(unused_variables, dead_code, missing_docs)]
     use tonic::codegen::*;
-    #[doc = " A proof of space data creation service"]
     pub struct PosDataServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
@@ -431,7 +430,6 @@ pub mod pos_data_service_server {
             request: tonic::Request<super::JobStatusStreamRequest>,
         ) -> Result<tonic::Response<Self::SubscribeJobStatusStreamStream>, tonic::Status>;
     }
-    #[doc = " A proof of space data creation service"]
     #[derive(Debug)]
     pub struct PosDataServiceServer<T: PosDataService> {
         inner: _Inner<T>,

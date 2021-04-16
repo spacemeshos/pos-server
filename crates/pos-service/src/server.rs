@@ -15,6 +15,11 @@ use tonic::transport::Server;
 use tonic::Status;
 use xactor::*;
 
+/// PosServer is a Spacemesh proof of space data generator service.
+/// The service manages a pool of compute providers (gpus) and schedules
+/// client-submitted jobs to use these providers to create pos data and to report job
+/// progress and errors to clients.
+/// todo: support aborting an in-progress job
 pub(crate) struct PosServer {
     providers: Vec<PosComputeProvider>,  // gpu compute providers
     pending_jobs: Vec<Job>,              // pending
