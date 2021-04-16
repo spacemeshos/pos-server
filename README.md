@@ -3,7 +3,7 @@
 A server for creating Spacemesh proof of space data files using one or more supported system gpus.
 The service provides a grpc service for clients to configure it, submit pos jobs and get jobs execution progress.
 Reuqested client jobs are executed using the system's available supported gpus. 
-To run the server, you need to have at least one supported gpu or set to tru the `use_cpu_provider` config param.
+To run the server, you need to have at least one supported gpu or set the `use_cpu_provider` config param to true to use the system's cpu. This is not recommended to production, only for testing.
 
 ## Prerequisites
 
