@@ -11,7 +11,7 @@ const COMPUTE_API_CLASS_CPU: u32 = 1;
 const COMPUTE_API_CLASS_CUDA: u32 = 2;
 const COMPUTE_API_CLASS_VULKAN: u32 = 3;
 
-fn get_provider_class_string(class: u32) -> &'static str {
+pub fn get_provider_class_string(class: u32) -> &'static str {
     match class {
         0 => "UNSPECIFIED",
         COMPUTE_API_CLASS_CPU => "CPU",

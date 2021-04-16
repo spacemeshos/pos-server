@@ -178,7 +178,7 @@ fn get_provider_class_string(class: u32) -> &'static str {
 
 pub fn do_providers_list() {
     let providers = get_providers();
-    println!("Available pos compute providers:");
+    println!("available pos compute providers:");
     for provider in &providers {
         println!(
             "{}: [{}] {}",

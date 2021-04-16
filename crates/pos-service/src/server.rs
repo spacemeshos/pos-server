@@ -32,12 +32,12 @@ pub(crate) struct PosServer {
 #[async_trait::async_trait]
 impl Actor for PosServer {
     async fn started(&mut self, _ctx: &mut Context<Self>) -> Result<()> {
-        debug!("PosServer system service starting...");
+        info!("PosServer system service starting...");
         Ok(())
     }
 
     async fn stopped(&mut self, _ctx: &mut Context<Self>) {
-        debug!("PosServer system service stopped");
+        info!("PosServer system service stopped");
     }
 }
 
@@ -75,9 +75,20 @@ impl Handler<Init> for PosServer {
     async fn handle(&mut self, _ctx: &mut Context<Self>, msg: Init) -> Result<()> {
         for p in get_providers() {
             if !msg.use_cpu_providers && p.compute_api == COMPUTE_API_CLASS_CPU {
-                // skip cpu provider
+                info!(
+                    "skipping cpu provider id: {}, model: {}, compute_api: {}",
+                    p.id,
+                    p.model,
+                    pos_api::api_extensions::get_provider_class_string(p.compute_api)
+                );
                 continue;
             }
+            info!(
+                "Adding to pool provider id: {}, model: {}, compute_api: {}",
+                p.id,
+                p.model,
+                pos_api::api_extensions::get_provider_class_string(p.compute_api)
+            );
             self.providers_pool.push(p.id);
             self.providers.push(p);
         }
