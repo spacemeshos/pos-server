@@ -148,8 +148,20 @@ impl Handler<UpdateJobStatus> for PosServer {
             // job is running or stopped
 
             if updated_job.status != JobStatus::Started as i32 {
+                info!(
+                    "job {} finished. Releasing gpu {} pool",
+                    updated_job.id, updated_job.compute_provider_id
+                );
                 // Job stopped or completed - release provider id of job to pool
                 self.providers_pool.push(updated_job.compute_provider_id);
+
+                // pick a pending job any start it
+                if let Some(new_job) = self.pending_jobs.pop() {
+                    info!("starting queued job {}", new_job.id);
+                    self.start_task(&new_job).await?;
+                } else {
+                    info!("no queued jobs");
+                }
             }
             // update job data
             self.jobs.insert(updated_job.id, updated_job.clone());
@@ -218,7 +230,7 @@ impl Handler<AddJob> for PosServer {
         if self.providers_pool.is_empty() {
             // all providers busy with in-progress jobs - queue the job
             self.pending_jobs.push(job.clone());
-            info!("all providers are busy - queueing job");
+            info!("all providers are busy - queueing job {}...", job.id);
             return Ok(job);
         }
 

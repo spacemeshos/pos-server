@@ -46,6 +46,10 @@ impl Display for JobStatus {
 }
 
 impl Job {
+    pub fn file_name(&self) -> String {
+        format!("{}.pos", self.id)
+    }
+
     /// Validate job data
     pub fn validate(&self, index_per_compute: u64, label_size: u32) -> Result<()> {
         if label_size != 8 {
