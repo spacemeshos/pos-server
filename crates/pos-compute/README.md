@@ -1,4 +1,4 @@
-# gpu-post-bindings
+# pos-compute
 
 A Rust create for using Spacemesh [gpu-post](http://github.com/spacemeshos/gpu-post) c-lib form Rust.
 
@@ -16,10 +16,7 @@ RUSTFLAGS="-L ./crates/gpu-post/resources" cargo build
 
 ## Running the Demo App
 
-
-todo: automate step 1 using build.rs.
-
-1. copy the gpu-post dlls to the target folder.
+1. Copy the gpu-post dlls to the resources folder.
 
 2.
 ```bash
