@@ -5,6 +5,7 @@ use chrono::{DateTime, Local, TimeZone};
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::{Display, Formatter};
+use std::ops::Sub;
 
 const COMPUTE_API_CLASS_CPU: u32 = 1;
 const COMPUTE_API_CLASS_CUDA: u32 = 2;
@@ -95,11 +96,21 @@ impl Display for Job {
         let started: DateTime<Local> = Local.timestamp(self.started as i64, 0);
         write!(f, "started: {}. ", started.to_rfc2822())?;
 
+        let stopped: DateTime<Local> = Local.timestamp(self.stopped as i64, 0);
         if self.stopped != 0 {
-            let stopped: DateTime<Local> = Local.timestamp(self.stopped as i64, 0);
             write!(f, "stopped: {}. ", stopped.to_rfc2822())?;
         }
-        write!(f, "bytes written (bits): {}. ", self.bits_written)?;
+
+        if self.status == JobStatus::Completed as i32 {
+            let time = stopped.sub(started);
+            write!(
+                f,
+                "Completed. work duration: {} (secs). ",
+                time.num_seconds()
+            )?;
+        }
+
+        write!(f, "data written (bits): {}. ", self.bits_written)?;
         write!(f, "client id: {}. ", hex::encode(self.client_id.clone()))?;
 
         if let Some(err) = self.last_error.as_ref() {

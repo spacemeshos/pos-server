@@ -104,30 +104,23 @@ async fn multiple_jobs_test() {
         match res {
             Ok(job_status) => {
                 let job = job_status.job.unwrap();
-                info!(
-                    "job {}/{}. gpu_id: {}. {}/{} bits.",
-                    job.id,
-                    job.friendly_name,
-                    job.compute_provider_id,
-                    job.bits_written,
-                    job.size_bits,
-                );
                 match job.status.try_into().unwrap() {
                     JobStatus::Completed => {
-                        info!("🎉 job completed!");
+                        info!("🎉 completed. job {}", job);
                         completed_jobs += 1;
                         if completed_jobs == total_jobs {
+                            info!("all jobs completed");
                             break;
                         }
                     }
                     JobStatus::Stopped => {
-                        panic!("💥 job stopped due to error")
+                        panic!("💥 job stopped due to error: {}", job)
                     }
                     JobStatus::Queued => {
-                        info!("job queued");
+                        info!("job queued: {}", job);
                     }
                     JobStatus::Started => {
-                        info!("job in progress...");
+                        info!("job in progress... {}", job);
                     }
                 }
             }
@@ -222,27 +215,19 @@ async fn job_status_handler(mut receiver: Streaming<JobStatusStreamResponse>) {
         match res {
             Ok(job_status) => {
                 let job = job_status.job.unwrap();
-                info!(
-                    "job id: {}. name: {}. gpu_id: {}. status: {}/{} bits.",
-                    job.id,
-                    job.friendly_name,
-                    job.compute_provider_id,
-                    job.bits_written,
-                    job.size_bits,
-                );
                 match job.status.try_into().unwrap() {
                     JobStatus::Completed => {
-                        info!("🎉 job {} completed!", job.id);
+                        info!("🎉 completed. job {}", job);
                         break;
                     }
                     JobStatus::Stopped => {
-                        panic!("💥 job {} stopped due to error", job.id)
+                        panic!("💥 job {} stopped due to error", job)
                     }
                     JobStatus::Queued => {
-                        info!("job {} queued", job.id);
+                        info!("job {} queued", job);
                     }
                     JobStatus::Started => {
-                        info!("job {} in progress", job.id);
+                        info!("job {} in progress", job);
                     }
                 }
             }
