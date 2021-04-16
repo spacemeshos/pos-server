@@ -1,5 +1,4 @@
 use crate::api::pos_grpc_service::PosGrpcService;
-
 use crate::{DEFAULT_BITS_PER_INDEX, DEFAULT_INDEXED_PER_CYCLE, DEFAULT_SALT};
 use anyhow::Result;
 use pos_api::api::job::JobStatus;
@@ -210,8 +209,6 @@ impl Handler<AddJob> for PosServer {
     async fn handle(&mut self, _ctx: &mut Context<Self>, msg: AddJob) -> Result<Job> {
         let data = msg.0;
 
-        // todo: verify data.post_size is in powers of 2 + below max
-
         let job = Job {
             id: rand::random(),
             bits_written: 0,
@@ -226,6 +223,14 @@ impl Handler<AddJob> for PosServer {
             proof_of_work_index: u64::MAX,
             compute_provider_id: u32::MAX,
         };
+
+        if let Err(e) = job.validate(
+            self.config.indexes_per_compute_cycle,
+            self.config.bits_per_index,
+        ) {
+            error!("job can't be added - validation failed: {}, {}", job, e);
+            return Err(e);
+        }
 
         if self.providers_pool.is_empty() {
             // all providers busy with in-progress jobs - queue the job
@@ -327,6 +332,8 @@ impl Handler<StartGrpcService> for PosServer {
     async fn handle(&mut self, _ctx: &mut Context<Self>, msg: StartGrpcService) -> Result<()> {
         let addr = format!("{}:{}", msg.host, msg.port).parse().unwrap();
         info!("starting grpc service on: {}...", addr);
+
+        // todo: add a grpc health service
         tokio::task::spawn(async move {
             let res = Server::builder()
                 .add_service(PosDataServiceServer::new(PosGrpcService::default()))

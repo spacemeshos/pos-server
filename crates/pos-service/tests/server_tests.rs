@@ -140,6 +140,7 @@ async fn multiple_jobs_test() {
 
     delete_pos_files(&all_jobs_response.jobs, config.data_dir);
 
+    // prevent the compiler from dropping guard before end of test
     info!("{}", guard.0.id());
 }
 
@@ -206,7 +207,11 @@ async fn one_job_test() {
     let job = resp.job.unwrap();
     info!("job info: {}", job);
     job_status_handler(receiver).await;
+
+    // delete the job's pos file
     delete_pos_files(&vec![job], config.data_dir);
+
+    // prevent the compiler from dropping guard before end of test
     info!("{}", guard.0.id());
 }
 

@@ -54,7 +54,7 @@ impl PosServer {
             self.config.indexes_per_compute_cycle,
             self.config.bits_per_index,
         ) {
-            error!("invalid job: {}", e);
+            error!("job won't run. validation failed. {}, {}", job, e);
             return Err(e);
         }
 

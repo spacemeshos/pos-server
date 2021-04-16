@@ -88,7 +88,8 @@ impl Display for Job {
         write!(f, "id: {}. ", self.id)?;
         write!(f, "name: {}. ", self.friendly_name)?;
         write!(f, "size (bits): {}. ", self.size_bits)?;
-        write!(f, "status: {}. ", self.status)?;
+        let status = JobStatus::try_from(self.status).unwrap();
+        write!(f, "status: {}. ", status)?;
 
         let submitted: DateTime<Local> = Local.timestamp(self.submitted as i64, 0);
         write!(f, "submitted: {}. ", submitted.to_rfc2822())?;
