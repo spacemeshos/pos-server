@@ -25,7 +25,7 @@ make test
 ```
 
 ## Using
-1. Configure and deploy the server on a system.
-1. Use any GRPC client to connect to the server's GRPC service endpoint.
-1. Call the [service api rpc methods]((https://github.com/spacemeshos/pos-server/blob/main/crates/pos-api/proto/pos_api_service/api.proto) from your client.
+1. Configure and deploy the server on a system with one or more supported compute providers.
+1. Use any GRPC client to connect to the server's GRPC service.
+1. Call the [service's methods]((https://github.com/spacemeshos/pos-server/blob/main/crates/pos-api/proto/pos_api_service/api.proto) from your client.
 
