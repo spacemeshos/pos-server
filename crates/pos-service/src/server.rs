@@ -65,7 +65,7 @@ impl Default for PosServer {
 
 #[message(result = "Result<()>")]
 pub(crate) struct Init {
-    /// server config - must be set when initializing
+    /// server base config - must be set when initializing
     pub(crate) use_cpu_providers: bool,
 }
 

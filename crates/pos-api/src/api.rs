@@ -249,7 +249,10 @@ pub mod pos_data_service_client {
         }
         #[doc = " Set service configuration"]
         #[doc = " Important: Don't set the config while there are jobs running or queued to run."]
-        #[doc = " Wait until all jobs have stopped before changing the config."]
+        #[doc = " Config before starting jobs or wait until all jobs have stopped before changing the config."]
+        #[doc = " todo: support removing one or more supported system compute providers from the providers pool."]
+        #[doc = " for example, a laptop may have a supported Intel internal gpu which is very slow and user"]
+        #[doc = " might want to use the 2nd laptop integral AMD/Nvidia gpu which has strong performance."]
         pub async fn set_config(
             &mut self,
             request: impl tonic::IntoRequest<super::SetConfigRequest>,
@@ -389,7 +392,10 @@ pub mod pos_data_service_server {
         ) -> Result<tonic::Response<super::GetProvidersResponse>, tonic::Status>;
         #[doc = " Set service configuration"]
         #[doc = " Important: Don't set the config while there are jobs running or queued to run."]
-        #[doc = " Wait until all jobs have stopped before changing the config."]
+        #[doc = " Config before starting jobs or wait until all jobs have stopped before changing the config."]
+        #[doc = " todo: support removing one or more supported system compute providers from the providers pool."]
+        #[doc = " for example, a laptop may have a supported Intel internal gpu which is very slow and user"]
+        #[doc = " might want to use the 2nd laptop integral AMD/Nvidia gpu which has strong performance."]
         async fn set_config(
             &self,
             request: tonic::Request<super::SetConfigRequest>,

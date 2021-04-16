@@ -10,7 +10,10 @@ service PosDataService {
 
   // Set service configuration
   // Important: Don't set the config while there are jobs running or queued to run.
-  // Wait until all jobs have stopped before changing the config.
+  // Config before starting jobs or wait until all jobs have stopped before changing the config.
+  // todo: support removing one or more supported system compute providers from the providers pool.
+  // for example, a laptop may have a supported Intel internal gpu which is very slow and user
+  // might want to use the 2nd laptop integral AMD/Nvidia gpu which has strong performance.
   rpc SetConfig(SetConfigRequest) returns (SetConfigResponse);
 
   // Get service current configuration
