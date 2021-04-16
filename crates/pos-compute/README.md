@@ -11,7 +11,7 @@ On Windows, copy both `gpu-setup.dll` and `gpu-setup.lib` to this project root.
 You need to add your project root directory to Cargo's linkable libs search path.
 
 ```bash
-RUSTFLAGS="-L ./crates/gpu-post/resources" cargo build
+RUSTFLAGS="-L ./crates/pos-compute/resources" cargo build
 ```
 
 ## Running the Demo App
@@ -20,5 +20,5 @@ RUSTFLAGS="-L ./crates/gpu-post/resources" cargo build
 
 2.
 ```bash
-RUSTFLAGS="-L ./creates/gpu-post/resources" cargo run
+RUSTFLAGS="-L ./creates/pos-compute/resources" cargo run
 ```
