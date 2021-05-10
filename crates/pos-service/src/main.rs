@@ -148,8 +148,6 @@ fn get_default_config() -> config::Config {
     config
         .set_default("data_dir", "./")
         .unwrap()
-        .set_default("log_file", "./log.txt")
-        .unwrap()
         .set_default("indexes_per_cycle", DEFAULT_INDEXED_PER_CYCLE.to_string())
         .unwrap()
         .set_default("bits_per_index", DEFAULT_BITS_PER_INDEX.to_string())

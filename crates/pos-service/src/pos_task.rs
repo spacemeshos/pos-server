@@ -82,6 +82,7 @@ impl PosServer {
             let mut buffer = vec![0_u8; buff_size];
             let mut hashes_computed: u64 = 0;
             let mut hashes_per_sec: u64 = 0;
+            let mut idx_solution: u64 = 0;
 
             // for now we create file called <job_id>.pos in the dest data folder
             let path = Path::new(task_config.data_dir.as_str())
@@ -127,6 +128,7 @@ impl PosServer {
                     task_config.n,
                     task_config.r,
                     task_config.p,
+                    &mut idx_solution as *mut u64,
                     &mut hashes_computed as *mut u64,
                     &mut hashes_per_sec as *mut u64,
                 );

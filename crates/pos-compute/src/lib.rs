@@ -6,11 +6,16 @@ pub const SPACEMESH_API_ERROR: i32 = -1;
 pub const SPACEMESH_API_ERROR_TIMEOUT: i32 = -2;
 pub const SPACEMESH_API_ERROR_ALREADY: i32 = -3;
 pub const SPACEMESH_API_ERROR_CANCELED: i32 = -4;
-pub const SPACEMESH_API_THROTTLED_MODE: i32 = 0x00008000;
 pub const COMPUTE_API_CLASS_UNSPECIFIED: u32 = 0;
 pub const COMPUTE_API_CLASS_CPU: u32 = 1; // useful for testing on systems without a cuda or vulkan GPU
 pub const COMPUTE_API_CLASS_CUDA: u32 = 2;
 pub const COMPUTE_API_CLASS_VULKAN: u32 = 3;
+
+pub enum OPTIONS {
+    ComputeLeafs = 0x1,
+    ComputePow = 0x10,
+    Throttle = 0x00008000,
+}
 
 pub struct PosComputeProvider {
     pub id: u32,          // 0, 1, 2...
@@ -21,10 +26,10 @@ pub struct PosComputeProvider {
 #[link(name = "gpu-setup")]
 extern "C" {
     fn scryptPositions(
-        provider_id: u32,          // POST compute provider ID
-        id: *const u8,             // 32 bytes
-        start_position: u64,       // e.g. 0
-        end_position: u64,         // e.g. 49,999
+        provider_id: u32,    // POST compute provider ID
+        id: *const u8,       // 32 bytes
+        start_position: u64, // e.g. 0
+        end_position: u64,   // e.g. 49,999
         hash_len_bits: u32, // (1...256) for each hash output, the number of prefix bits (not bytes) to copy into the buffer
         salt: *const u8,    // 32 bytes
         options: u32,       // throttle etc.
@@ -32,8 +37,9 @@ extern "C" {
         N: u32,       // scrypt N
         R: u32,       // scrypt r
         P: u32,       // scrypt p
+        idx_solution: *mut u64,
         hashes_computed: *mut u64, //
-        hashes_per_sec: *mut u64, //
+        hashes_per_sec: *mut u64,  //
     ) -> i32;
 
     // stop all GPU work and don't fill the passed-in buffer with any more results.
@@ -102,6 +108,7 @@ pub fn scrypt_positions(
     n: u32,         // scrypt N
     r: u32,         // scrypt r
     p: u32,         // scrypt p
+    idx_solution: *mut u64, //
     hashes_computed: *mut u64, //
     hashes_per_sec: *mut u64, //
 ) -> i32 {
@@ -118,6 +125,7 @@ pub fn scrypt_positions(
             n,
             r,
             p,
+            idx_solution,
             hashes_computed,
             hashes_per_sec,
         )
@@ -142,6 +150,8 @@ pub fn do_benchmark() {
             if provider.compute_api as u32 != COMPUTE_API_CLASS_CPU {
                 let mut hashes_computed: u64 = 0;
                 let mut hashes_per_sec: u64 = 0;
+                let mut idx_solution: u64 = 0;
+
                 scrypt_positions(
                     provider.id,
                     &id,
@@ -149,11 +159,12 @@ pub fn do_benchmark() {
                     LABELS_COUNT as u64 - 1,
                     LABEL_SIZE,
                     &salt,
-                    0,
+                    OPTIONS::ComputeLeafs as u32,
                     &mut out,
                     512,
                     1,
                     1,
+                    &mut idx_solution as *mut u64,
                     &mut hashes_computed as *mut u64,
                     &mut hashes_per_sec as *mut u64,
                 );

@@ -32,7 +32,7 @@ impl Drop for Guard {
         let pid = self.0.id() as i32;
         match signal::kill(Pid::from_raw(pid), Signal::SIGINT) {
             Err(e) => info!("could not kill child process {}: {}", pid, e),
-            Ok(_) => info!("killed process {}", pid),
+            Ok(_) => info!("killed guarded process {}", pid),
         }
     }
 }
