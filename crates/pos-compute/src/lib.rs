@@ -115,7 +115,6 @@ pub fn stop_providers(ms_timeout: u32) -> i32 {
     unsafe { stop(ms_timeout) }
 }
 
-/// Compute Spacemesh proof of space v0.1.0
 pub fn compute_pos(
     provider_id: u32,          // POST compute provider ID
     id: &[u8],                 // 32 bytes
@@ -162,8 +161,9 @@ const LABELS_COUNT: u64 = 9 * 128 * 1024;
 pub fn do_benchmark() {
     let id: [u8; 32] = [0; 32];
     let salt: [u8; 32] = [0; 32];
-    let providers = get_providers();
     let d: [u8; 32] = [0; 32];
+
+    let providers = get_providers();
 
     if providers.len() > 0 {
         const OUT_SIZE: usize = (LABELS_COUNT as usize * LABEL_SIZE as usize + 7) / 8;
@@ -191,6 +191,9 @@ pub fn do_benchmark() {
                     &mut hashes_computed as *mut u64,
                     &mut hashes_per_sec as *mut u64,
                 );
+
+                println!("Result: {}", res);
+
                 println!(
                     "{}: status: {} hashes: {} ({} h/s)",
                     provider.model, status, hashes_computed, hashes_per_sec

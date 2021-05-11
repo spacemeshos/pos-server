@@ -152,7 +152,7 @@ impl PosServer {
                 if hashes_computed < task_config.indexes_per_compute_cycle {
                     PosServer::task_error(
                         &mut task_job,
-                        501,
+                        502,
                         format!(
                             "gpu compute error. Hashes computed: {}. Expected:{}",
                             hashes_computed, task_config.indexes_per_compute_cycle
