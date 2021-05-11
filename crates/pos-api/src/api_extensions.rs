@@ -45,7 +45,7 @@ impl Display for ComputeResults {
         let str = match self {
             ComputeResults::NoError => "No error",
             ComputeResults::PowSolutionFound => "Pow solution found",
-            ComputeResults::ComputeError => "ComputeError",
+            ComputeResults::ComputeError => "Compute error",
             ComputeResults::Timeout => "Timeout",
             ComputeResults::Already => "Already",
             ComputeResults::Canceled => "Canceled",

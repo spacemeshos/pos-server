@@ -32,7 +32,7 @@ publish:
 	@$(CARGO) publish
 
 run: build
-	@$(CARGO) run -p pos-service
+	@$(CARGO) run -p pos-compute
 
 test: build
 	@$(CARGO_TEST)

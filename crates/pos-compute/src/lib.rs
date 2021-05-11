@@ -116,7 +116,7 @@ pub fn stop_providers(ms_timeout: u32) -> i32 {
 }
 
 pub fn scrypt_positions(
-    provider_id: u32,    // POST compute provider ID
+    provider_id: u32,    // POS compute provider ID
     id: &[u8],           // 32 bytes
     start_position: u64, // e.g. 0
     end_position: u64,   // e.g. 49,999
@@ -161,8 +161,9 @@ const LABELS_COUNT: u64 = 9 * 128 * 1024;
 pub fn do_benchmark() {
     let id: [u8; 32] = [0; 32];
     let salt: [u8; 32] = [0; 32];
-    let providers = get_providers();
     let d: [u8; 32] = [0; 32];
+
+    let providers = get_providers();
 
     if providers.len() > 0 {
         const OUT_SIZE: usize = (LABELS_COUNT as usize * LABEL_SIZE as usize + 7) / 8;
@@ -173,7 +174,7 @@ pub fn do_benchmark() {
                 let mut hashes_per_sec: u64 = 0;
                 let mut idx_solution: u64 = 0;
 
-                scrypt_positions(
+                let res = scrypt_positions(
                     provider.id,
                     &id,
                     0,
@@ -190,6 +191,9 @@ pub fn do_benchmark() {
                     &mut hashes_computed as *mut u64,
                     &mut hashes_per_sec as *mut u64,
                 );
+
+                println!("Result: {}", res);
+
                 println!(
                     "{}: {} hashes, {} h/s",
                     provider.model, hashes_computed, hashes_per_sec
