@@ -124,7 +124,7 @@ impl PosServer {
                     end_idx,
                     task_config.bits_per_index,
                     task_config.salt.as_ref(),
-                    OPTIONS::ComputeLeafs as u32,
+                    OPTIONS::ComputeLeaves as u32,
                     &mut buffer,
                     task_config.n,
                     task_config.r,

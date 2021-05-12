@@ -1,5 +1,5 @@
 use crate::api::pos_grpc_service::PosGrpcService;
-use crate::{DEFAULT_BITS_PER_INDEX, DEFAULT_INDEXED_PER_CYCLE, DEFAULT_SALT, DEFAULT_D};
+use crate::{DEFAULT_BITS_PER_INDEX, DEFAULT_D, DEFAULT_INDEXED_PER_CYCLE, DEFAULT_SALT};
 use anyhow::Result;
 use pos_api::api::job::JobStatus;
 use pos_api::api::pos_data_service_server::PosDataServiceServer;
