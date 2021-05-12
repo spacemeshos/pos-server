@@ -97,7 +97,8 @@ pub fn stop_providers(ms_timeout: u32) -> i32 {
     unsafe { stop(ms_timeout) }
 }
 
-pub fn scrypt_positions(
+/// Compute Spacemesh proof of space v0.1.0
+pub fn compute_pos(
     provider_id: u32,          // POST compute provider ID
     id: &[u8],                 // 32 bytes
     start_position: u64,       // e.g. 0
@@ -156,7 +157,7 @@ pub fn do_benchmark() {
                 let mut hashes_per_sec: u64 = 0;
                 let mut idx_solution: u64 = 0;
 
-                let status = scrypt_positions(
+                let status = compute_pos(
                     provider.id,
                     &id,
                     0,
@@ -174,7 +175,7 @@ pub fn do_benchmark() {
                     &mut hashes_per_sec as *mut u64,
                 );
                 println!(
-                    "{}: status: {} hashes: {} , ({} h/s)",
+                    "{}: status: {} hashes: {} ({} h/s)",
                     provider.model, status, hashes_computed, hashes_per_sec
                 );
             }

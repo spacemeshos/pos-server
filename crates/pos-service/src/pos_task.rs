@@ -9,7 +9,7 @@ use std::path::Path;
 use tokio::task;
 use xactor::*;
 
-use pos_compute::scrypt_positions;
+use pos_compute::compute_pos;
 use pos_compute::OPTIONS;
 
 impl PosServer {
@@ -117,7 +117,7 @@ impl PosServer {
                     end_idx
                 );
 
-                scrypt_positions(
+                compute_pos(
                     task_job.compute_provider_id,
                     task_job.client_id.as_ref(),
                     start_idx,
