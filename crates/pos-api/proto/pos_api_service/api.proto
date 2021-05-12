@@ -46,6 +46,7 @@ message Config {
   uint32 N = 5; // scrypt param
   uint32 R = 6; // scrypt param
   uint32 P = 7; // scrypt param
+  bytes  d = 8; // target
 }
 
 // A pos compute provider such as a GPU or a CPU
