@@ -7,6 +7,7 @@ use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::ops::Sub;
 
+// Compute operation result
 pub enum ComputeResults {
     NoError = 0,
     PowSolutionFound = 1,
