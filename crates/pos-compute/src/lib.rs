@@ -192,8 +192,6 @@ pub fn do_benchmark() {
                     &mut hashes_per_sec as *mut u64,
                 );
 
-                println!("Result: {}", res);
-
                 println!(
                     "{}: status: {} hashes: {} ({} h/s)",
                     provider.model, status, hashes_computed, hashes_per_sec
