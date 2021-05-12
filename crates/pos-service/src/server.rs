@@ -1,6 +1,6 @@
 use crate::api::pos_grpc_service::PosGrpcService;
 use crate::{DEFAULT_BITS_PER_INDEX, DEFAULT_D, DEFAULT_INDEXED_PER_CYCLE, DEFAULT_SALT};
-use anyhow::Result;
+use anyhow::{bail, Result};
 use pos_api::api::job::JobStatus;
 use pos_api::api::pos_data_service_server::PosDataServiceServer;
 use pos_api::api::{
@@ -93,6 +93,11 @@ impl Handler<Init> for PosServer {
             self.providers_pool.push(p.id);
             self.providers.push(p);
         }
+
+        if self.providers.is_empty() {
+            bail!("no compute providers are available on the system.")
+        }
+
         Ok(())
     }
 }
