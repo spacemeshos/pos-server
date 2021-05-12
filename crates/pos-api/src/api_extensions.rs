@@ -7,17 +7,73 @@ use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::ops::Sub;
 
-const COMPUTE_API_CLASS_CPU: u32 = 1;
-const COMPUTE_API_CLASS_CUDA: u32 = 2;
-const COMPUTE_API_CLASS_VULKAN: u32 = 3;
+// Compute operation result
+pub enum ComputeResults {
+    NoError = 0,
+    PowSolutionFound = 1,
+    ComputeError = -1,
+    Timeout = -2,
+    Already = -3,
+    Canceled = -4,
+    MissingComputeOptions = -5,
+    InvalidParam = -6,
+}
+
+impl TryFrom<i32> for ComputeResults {
+    type Error = ();
+    fn try_from(v: i32) -> Result<Self, Self::Error> {
+        match v {
+            x if x == ComputeResults::NoError as i32 => Ok(ComputeResults::NoError),
+            x if x == ComputeResults::PowSolutionFound as i32 => {
+                Ok(ComputeResults::PowSolutionFound)
+            }
+            x if x == ComputeResults::ComputeError as i32 => Ok(ComputeResults::ComputeError),
+            x if x == ComputeResults::Timeout as i32 => Ok(ComputeResults::Timeout),
+            x if x == ComputeResults::Already as i32 => Ok(ComputeResults::Already),
+            x if x == ComputeResults::Canceled as i32 => Ok(ComputeResults::Canceled),
+            x if x == ComputeResults::MissingComputeOptions as i32 => {
+                Ok(ComputeResults::MissingComputeOptions)
+            }
+            x if x == ComputeResults::InvalidParam as i32 => Ok(ComputeResults::InvalidParam),
+
+            _ => Err(()),
+        }
+    }
+}
+
+impl Display for ComputeResults {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let str = match self {
+            ComputeResults::NoError => "No error",
+            ComputeResults::PowSolutionFound => "Pow solution found",
+            ComputeResults::ComputeError => "Compute error",
+            ComputeResults::Timeout => "Timeout",
+            ComputeResults::Already => "Already",
+            ComputeResults::Canceled => "Canceled",
+            ComputeResults::MissingComputeOptions => "Missing options",
+            ComputeResults::InvalidParam => "Invalid params",
+        };
+        write!(f, "{}", str)
+    }
+}
+
+pub enum ComputeOptions {
+    ComputeLeaves = 1,
+    ComputePow = 2,
+}
+
+pub enum ComputeClass {
+    Cpu = 1,
+    Cuda = 2,
+    Vulkan = 3,
+}
 
 pub fn get_provider_class_string(class: u32) -> &'static str {
     match class {
-        0 => "UNSPECIFIED",
-        COMPUTE_API_CLASS_CPU => "CPU",
-        COMPUTE_API_CLASS_CUDA => "CUDA",
-        COMPUTE_API_CLASS_VULKAN => "VULKAN",
-        _ => "INVALID",
+        x if x == ComputeClass::Cpu as u32 => "CPU",
+        x if x == ComputeClass::Cuda as u32 => "CUDA",
+        x if x == ComputeClass::Vulkan as u32 => "VULKAN",
+        _ => "UNSPECIFIED",
     }
 }
 
