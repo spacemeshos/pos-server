@@ -10,6 +10,7 @@ use tokio::task;
 use xactor::*;
 
 use pos_compute::scrypt_positions;
+use pos_compute::OPTIONS;
 
 impl PosServer {
     /// helper sync function used to update job status via the server service from blocking code
@@ -123,11 +124,12 @@ impl PosServer {
                     end_idx,
                     task_config.bits_per_index,
                     task_config.salt.as_ref(),
-                    0,
+                    OPTIONS::ComputeLeafs as u32,
                     &mut buffer,
                     task_config.n,
                     task_config.r,
                     task_config.p,
+                    task_config.d.as_ref(),
                     &mut idx_solution as *mut u64,
                     &mut hashes_computed as *mut u64,
                     &mut hashes_per_sec as *mut u64,

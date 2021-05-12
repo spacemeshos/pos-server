@@ -1,5 +1,5 @@
 use crate::api::pos_grpc_service::PosGrpcService;
-use crate::{DEFAULT_BITS_PER_INDEX, DEFAULT_INDEXED_PER_CYCLE, DEFAULT_SALT};
+use crate::{DEFAULT_BITS_PER_INDEX, DEFAULT_INDEXED_PER_CYCLE, DEFAULT_SALT, DEFAULT_D};
 use anyhow::Result;
 use pos_api::api::job::JobStatus;
 use pos_api::api::pos_data_service_server::PosDataServiceServer;
@@ -56,6 +56,7 @@ impl Default for PosServer {
                 n: 512,
                 r: 1,
                 p: 1,
+                d: hex::decode(DEFAULT_D).unwrap(),
             },
             providers_pool: vec![],
             job_status_subscribers: HashMap::default(),

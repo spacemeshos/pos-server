@@ -25,6 +25,7 @@ const DEFAULT_HOST: &str = "[::1]";
 const DEFAULT_INDEXED_PER_CYCLE: u64 = 9 * 128 * 1024;
 const DEFAULT_BITS_PER_INDEX: u32 = 8;
 const DEFAULT_SALT: &str = "114a00005de29b0aaad6814e5f33d357686da48923e8e4864ee5d6e20053e886";
+const DEFAULT_D: &str =    "0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -71,6 +72,7 @@ async fn start_server(config: Config) -> Result<()> {
 
     // set server config
     let salt = hex::decode(config.get_str("salt").unwrap()).unwrap();
+    let d = hex::decode(config.get_str("d").unwrap()).unwrap();
     use pos_api::api::Config;
     server
         .call(SetConfig(Config {
@@ -82,6 +84,7 @@ async fn start_server(config: Config) -> Result<()> {
             n: config.get_int("n").unwrap() as u32,
             r: config.get_int("r").unwrap() as u32,
             p: config.get_int("p").unwrap() as u32,
+            d,
         }))
         .await??;
 
@@ -153,6 +156,8 @@ fn get_default_config() -> config::Config {
         .set_default("bits_per_index", DEFAULT_BITS_PER_INDEX.to_string())
         .unwrap()
         .set_default("salt", DEFAULT_SALT)
+        .unwrap()
+        .set_default("d", DEFAULT_D)
         .unwrap()
         .set_default("port", DEFAULT_GRPC_PORT.to_string())
         .unwrap()

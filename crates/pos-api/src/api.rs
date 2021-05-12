@@ -23,6 +23,9 @@ pub struct Config {
     /// scrypt param
     #[prost(uint32, tag = "7")]
     pub p: u32,
+    /// target
+    #[prost(bytes = "vec", tag = "8")]
+    pub d: ::prost::alloc::vec::Vec<u8>,
 }
 /// A pos compute provider such as a GPU or a CPU
 #[derive(Clone, PartialEq, ::prost::Message)]
