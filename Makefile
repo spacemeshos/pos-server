@@ -32,6 +32,7 @@ publish:
 	@$(CARGO) publish
 
 run: build
+	export VK_ICD_FILENAMES="./crates/pos-compute/resources/MoltenVK_icd.json"
 	@$(CARGO) run -p pos-compute
 
 test: build
