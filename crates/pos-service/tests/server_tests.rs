@@ -27,7 +27,7 @@ struct Guard(Child);
 impl Drop for Guard {
     fn drop(&mut self) {
         let pid = self.0.id() as i32;
-//        match signal::kill(Pid::from_raw(pid), Signal::SIGINT) {
+        //        match signal::kill(Pid::from_raw(pid), Signal::SIGINT) {
         match self.0.kill() {
             Err(e) => info!("could not kill child process {}: {}", pid, e),
             Ok(_) => info!("killed guarded process {}", pid),

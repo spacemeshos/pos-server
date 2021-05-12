@@ -25,7 +25,7 @@ const DEFAULT_HOST: &str = "[::1]";
 const DEFAULT_INDEXED_PER_CYCLE: u64 = 9 * 128 * 1024;
 const DEFAULT_BITS_PER_INDEX: u32 = 8;
 const DEFAULT_SALT: &str = "114a00005de29b0aaad6814e5f33d357686da48923e8e4864ee5d6e20053e886";
-const DEFAULT_D: &str =    "0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+const DEFAULT_D: &str = "0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {

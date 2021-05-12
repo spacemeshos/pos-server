@@ -12,7 +12,7 @@ pub const COMPUTE_API_CLASS_CUDA: u32 = 2;
 pub const COMPUTE_API_CLASS_VULKAN: u32 = 3;
 
 pub enum OPTIONS {
-    ComputeLeafs = 0x1,
+    ComputeLeaves = 0x1,
     ComputePow = 0x2,
     Throttle = 0x00008000,
 }
@@ -26,10 +26,10 @@ pub struct PosComputeProvider {
 #[link(name = "gpu-setup")]
 extern "C" {
     fn scryptPositions(
-        provider_id: u32,    // POST compute provider ID
-        id: *const u8,       // 32 bytes
-        start_position: u64, // e.g. 0
-        end_position: u64,   // e.g. 49,999
+        provider_id: u32,          // POST compute provider ID
+        id: *const u8,             // 32 bytes
+        start_position: u64,       // e.g. 0
+        end_position: u64,         // e.g. 49,999
         hash_len_bits: u32, // (1...256) for each hash output, the number of prefix bits (not bytes) to copy into the buffer
         salt: *const u8,    // 32 bytes
         options: u32,       // throttle etc.
@@ -37,10 +37,10 @@ extern "C" {
         N: u32,       // scrypt N
         R: u32,       // scrypt r
         P: u32,       // scrypt p
-	D: *const u8, // Target D for the POW computation. 256 bits.
-        idx_solution: *mut u64,
-        hashes_computed: *mut u64, //
-        hashes_per_sec: *mut u64,  //
+        D: *const u8, // Target D for the POW computation. 32 bytes
+        idx_solution: *mut u64, // POW solution index
+        hashes_computed: *mut u64, // Number of hashes computed by execution
+        hashes_per_sec: *mut u64, // performance
     ) -> i32;
 
     // stop all GPU work and don't fill the passed-in buffer with any more results.
@@ -109,8 +109,8 @@ pub fn scrypt_positions(
     n: u32,         // scrypt N
     r: u32,         // scrypt r
     p: u32,         // scrypt p
-    d: &[u8],       // Target D for the POW computation. 256 bits.
-    idx_solution: *mut u64, //
+    d: &[u8],       // Target D for the POW computation. 32 bytes. eg. 0x0ff...
+    idx_solution: *mut u64, // POW computation solution index
     hashes_computed: *mut u64, //
     hashes_per_sec: *mut u64, //
 ) -> i32 {
@@ -163,7 +163,7 @@ pub fn do_benchmark() {
                     LABELS_COUNT as u64 - 1,
                     LABEL_SIZE,
                     &salt,
-                    OPTIONS::ComputeLeafs as u32,
+                    OPTIONS::ComputeLeaves as u32,
                     &mut out,
                     512,
                     1,

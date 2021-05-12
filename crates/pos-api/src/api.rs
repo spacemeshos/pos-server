@@ -23,7 +23,7 @@ pub struct Config {
     /// scrypt param
     #[prost(uint32, tag = "7")]
     pub p: u32,
-    /// target
+    /// target difficulty, 32 bytes
     #[prost(bytes = "vec", tag = "8")]
     pub d: ::prost::alloc::vec::Vec<u8>,
 }
