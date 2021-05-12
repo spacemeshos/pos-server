@@ -9,9 +9,8 @@ use std::path::Path;
 use tokio::task;
 use xactor::*;
 
-use pos_api::api_extensions::{ComputeOptions, ComputeResults};
 use pos_compute::scrypt_positions;
-use std::convert::TryFrom;
+use pos_compute::OPTIONS;
 
 impl PosServer {
     /// helper sync function used to update job status via the server service from blocking code
@@ -84,7 +83,7 @@ impl PosServer {
             let mut buffer = vec![0_u8; buff_size];
             let mut hashes_computed: u64 = 0;
             let mut hashes_per_sec: u64 = 0;
-            let mut idx_solution: u64 = u64::MAX;
+            let mut idx_solution: u64 = 0;
 
             // for now we create file called <job_id>.pos in the dest data folder
             let path = Path::new(task_config.data_dir.as_str())
@@ -104,8 +103,6 @@ impl PosServer {
 
             let mut file_writer = BufWriter::new(file);
 
-            let d: [u8; 32] = [0; 32];
-
             for i in 0..iterations {
                 let start_idx = i * task_config.indexes_per_compute_cycle;
                 let end_idx = start_idx + task_config.indexes_per_compute_cycle - 1;
@@ -120,46 +117,26 @@ impl PosServer {
                     end_idx
                 );
 
-                let res = scrypt_positions(
+                scrypt_positions(
                     task_job.compute_provider_id,
                     task_job.client_id.as_ref(),
                     start_idx,
                     end_idx,
                     task_config.bits_per_index,
                     task_config.salt.as_ref(),
-                    ComputeOptions::ComputeLeaves as u32, // compute leaves for now
+                    OPTIONS::ComputeLeafs as u32,
                     &mut buffer,
                     task_config.n,
                     task_config.r,
                     task_config.p,
-                    d.as_ref(),
+                    task_config.d.as_ref(),
                     &mut idx_solution as *mut u64,
                     &mut hashes_computed as *mut u64,
                     &mut hashes_per_sec as *mut u64,
                 );
 
-                let result = ComputeResults::try_from(res).unwrap();
-
-                info!("compute result: {}", result);
-
-                if res != ComputeResults::NoError as i32 {
-                    PosServer::task_error(
-                        &mut task_job,
-                        501,
-                        format!("gpu compute error. Unexpected result: {}", result),
-                    );
-                    break;
-                }
-
                 if hashes_computed < task_config.indexes_per_compute_cycle {
-                    PosServer::task_error(
-                        &mut task_job,
-                        502,
-                        format!(
-                            "gpu compute error. Hashes computed: {}. Expected:{}",
-                            hashes_computed, task_config.indexes_per_compute_cycle
-                        ),
-                    );
+                    PosServer::task_error(&mut task_job, 501, "gpu compute error".into());
                     break;
                 }
 

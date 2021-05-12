@@ -13,7 +13,7 @@ pub const COMPUTE_API_CLASS_VULKAN: u32 = 3;
 
 pub enum OPTIONS {
     ComputeLeafs = 0x1,
-    ComputePow = 0x10,
+    ComputePow = 0x2,
     Throttle = 0x00008000,
 }
 
@@ -23,42 +23,24 @@ pub struct PosComputeProvider {
     pub compute_api: u32, // A provided compute api
 }
 
-/*
-   uint32_t provider_id,		// POST compute provider ID
-   const uint8_t *id,			// 32 bytes
-   uint64_t start_position,	    // e.g. 0
-   uint64_t end_position,		// e.g. 49,999
-   uint32_t hash_len_bits,		// (1...256) for each hash output, the number of prefix bits (not bytes) to copy into the buffer
-   const uint8_t *salt,		    // 32 bytes
-   uint32_t options,			// compute leafs and or compute pow
-   uint8_t *out,				// memory buffer large enough to include hash_len_bits * number of requested hashes
-   uint32_t N,					// scrypt N
-   uint32_t R,					// scrypt r
-   uint32_t P,					// scrypt p
-   uint8_t *D,					// Target D for the POW computation. 256 bits.
-   uint64_t *idx_solution,		// index of output where output < D if POW compute was on. MAX_UINT64 otherwise.
-   uint64_t *hashes_computed,	//
-   uint64_t *hashes_per_sec	    //
-*/
-
 #[link(name = "gpu-setup")]
 extern "C" {
     fn scryptPositions(
-        provider_id: u32,       // POST compute provider ID
-        id: *const u8,          // 32 bytes
-        start_position: u64,    // e.g. 0
-        end_position: u64,      // e.g. 49,999
+        provider_id: u32,    // POST compute provider ID
+        id: *const u8,       // 32 bytes
+        start_position: u64, // e.g. 0
+        end_position: u64,   // e.g. 49,999
         hash_len_bits: u32, // (1...256) for each hash output, the number of prefix bits (not bytes) to copy into the buffer
         salt: *const u8,    // 32 bytes
-        options: u32,       // throttle, leafs, pow etc.
+        options: u32,       // throttle etc.
         out: *mut u8, // memory buffer large enough to include hash_len_bits * number of requested hashes
         N: u32,       // scrypt N
         R: u32,       // scrypt r
         P: u32,       // scrypt p
-        D: *const u8, // Target D for the POW computation. 32 bytes.
-        idx_solution: *mut u64, // pow solution index
-        hashes_computed: *mut u64,
-        hashes_per_sec: *mut u64,
+	D: *const u8, // Target D for the POW computation. 256 bits.
+        idx_solution: *mut u64,
+        hashes_computed: *mut u64, //
+        hashes_per_sec: *mut u64,  //
     ) -> i32;
 
     // stop all GPU work and don't fill the passed-in buffer with any more results.
@@ -116,10 +98,10 @@ pub fn stop_providers(ms_timeout: u32) -> i32 {
 }
 
 pub fn scrypt_positions(
-    provider_id: u32,    // POS compute provider ID
-    id: &[u8],           // 32 bytes
-    start_position: u64, // e.g. 0
-    end_position: u64,   // e.g. 49,999
+    provider_id: u32,          // POST compute provider ID
+    id: &[u8],                 // 32 bytes
+    start_position: u64,       // e.g. 0
+    end_position: u64,         // e.g. 49,999
     hash_len_bits: u32, // (1...256) for each hash output, the number of prefix bits (not bytes) to copy into the buffer
     salt: &[u8],        // 32 bytes
     options: u32,       // throttle etc.
@@ -127,10 +109,10 @@ pub fn scrypt_positions(
     n: u32,         // scrypt N
     r: u32,         // scrypt r
     p: u32,         // scrypt p
-    d: &[u8],       // 32 bytes
-    idx_solution: *mut u64,
-    hashes_computed: *mut u64,
-    hashes_per_sec: *mut u64,
+    d: &[u8],       // Target D for the POW computation. 256 bits.
+    idx_solution: *mut u64, //
+    hashes_computed: *mut u64, //
+    hashes_per_sec: *mut u64, //
 ) -> i32 {
     unsafe {
         scryptPositions(
@@ -153,6 +135,7 @@ pub fn scrypt_positions(
     }
 }
 
+////////////////////////////////////////////
 // Utility functions and helpers below
 
 const LABEL_SIZE: u32 = 8;
@@ -162,7 +145,6 @@ pub fn do_benchmark() {
     let id: [u8; 32] = [0; 32];
     let salt: [u8; 32] = [0; 32];
     let d: [u8; 32] = [0; 32];
-
     let providers = get_providers();
 
     if providers.len() > 0 {
@@ -174,7 +156,7 @@ pub fn do_benchmark() {
                 let mut hashes_per_sec: u64 = 0;
                 let mut idx_solution: u64 = 0;
 
-                let res = scrypt_positions(
+                scrypt_positions(
                     provider.id,
                     &id,
                     0,
@@ -191,9 +173,6 @@ pub fn do_benchmark() {
                     &mut hashes_computed as *mut u64,
                     &mut hashes_per_sec as *mut u64,
                 );
-
-                println!("Result: {}", res);
-
                 println!(
                     "{}: {} hashes, {} h/s",
                     provider.model, hashes_computed, hashes_per_sec
