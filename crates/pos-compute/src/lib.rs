@@ -155,7 +155,8 @@ pub fn do_benchmark() {
                 let mut hashes_computed: u64 = 0;
                 let mut hashes_per_sec: u64 = 0;
                 let mut idx_solution: u64 = 0;
-                scrypt_positions(
+
+                let status = scrypt_positions(
                     provider.id,
                     &id,
                     0,
@@ -173,8 +174,8 @@ pub fn do_benchmark() {
                     &mut hashes_per_sec as *mut u64,
                 );
                 println!(
-                    "{}: {} hashes, {} h/s",
-                    provider.model, hashes_computed, hashes_per_sec
+                    "{}: status: {} hashes: {} , ({} h/s)",
+                    provider.model, status, hashes_computed, hashes_per_sec
                 );
             }
         }
