@@ -149,13 +149,12 @@ pub fn do_benchmark() {
 
     if providers.len() > 0 {
         const OUT_SIZE: usize = (LABELS_COUNT as usize * LABEL_SIZE as usize + 7) / 8;
-        let mut out: [u8; OUT_SIZE] = [0; OUT_SIZE];
+        let mut out = vec![0_u8; OUT_SIZE];
         for provider in &providers {
             if provider.compute_api as u32 != COMPUTE_API_CLASS_CPU {
                 let mut hashes_computed: u64 = 0;
                 let mut hashes_per_sec: u64 = 0;
                 let mut idx_solution: u64 = 0;
-
                 scrypt_positions(
                     provider.id,
                     &id,
