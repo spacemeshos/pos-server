@@ -13,7 +13,7 @@ pub const COMPUTE_API_CLASS_VULKAN: u32 = 3;
 
 pub enum OPTIONS {
     ComputeLeafs = 0x1,
-    ComputePow = 0x10,
+    ComputePow = 0x2,
     Throttle = 0x00008000,
 }
 
@@ -37,6 +37,7 @@ extern "C" {
         N: u32,       // scrypt N
         R: u32,       // scrypt r
         P: u32,       // scrypt p
+	D: *const u8, // Target D for the POW computation. 256 bits.
         idx_solution: *mut u64,
         hashes_computed: *mut u64, //
         hashes_per_sec: *mut u64,  //
@@ -108,6 +109,7 @@ pub fn scrypt_positions(
     n: u32,         // scrypt N
     r: u32,         // scrypt r
     p: u32,         // scrypt p
+    d: &[u8],       // Target D for the POW computation. 256 bits.
     idx_solution: *mut u64, //
     hashes_computed: *mut u64, //
     hashes_per_sec: *mut u64, //
@@ -125,6 +127,7 @@ pub fn scrypt_positions(
             n,
             r,
             p,
+            d.as_ptr(),
             idx_solution,
             hashes_computed,
             hashes_per_sec,
@@ -141,6 +144,7 @@ const LABELS_COUNT: u64 = 9 * 128 * 1024;
 pub fn do_benchmark() {
     let id: [u8; 32] = [0; 32];
     let salt: [u8; 32] = [0; 32];
+    let d: [u8; 32] = [0; 32];
     let providers = get_providers();
 
     if providers.len() > 0 {
@@ -164,6 +168,7 @@ pub fn do_benchmark() {
                     512,
                     1,
                     1,
+                    &d,
                     &mut idx_solution as *mut u64,
                     &mut hashes_computed as *mut u64,
                     &mut hashes_per_sec as *mut u64,
