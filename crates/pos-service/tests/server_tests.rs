@@ -36,12 +36,28 @@ impl Drop for Guard {
 }
 
 /// Start pos server and return grpc client to its
-async fn start_server() -> (PosDataServiceClient<Channel>, Guard) {
+async fn start_server(use_cpu_provider: bool) -> (PosDataServiceClient<Channel>, Guard) {
     let path = env::current_dir().unwrap();
-    info!("Path: {:?}", path);
+    let tests_path = path.join("tests");
+
+    let config_path = match use_cpu_provider {
+        true => {
+            info!("using cpu provider via config file");
+            tests_path.join("cpu_provider_conf.json")
+        }
+        false => {
+            info!("using gpus providers via config file");
+            tests_path.join("gpus_providers_conf.json")
+        }
+    };
+
+    info!("Server config file path: {:?}", config_path);
 
     let server_path = "../../target/debug/pos-service";
-    let server = Command::new(server_path).spawn().unwrap();
+    let server = Command::new(server_path)
+        .args(&["-c", config_path.display().to_string().as_str()])
+        .spawn()
+        .unwrap();
 
     // grpc server async warmup
     sleep(Duration::from_secs(5)).await;
@@ -54,6 +70,7 @@ async fn start_server() -> (PosDataServiceClient<Channel>, Guard) {
     )
 }
 
+/// Multiple short jobs using cpu provider
 #[tokio::test]
 async fn multiple_jobs_test() {
     const POST_SIZE_BITS: u64 = 8192 * 32;
@@ -69,7 +86,7 @@ async fn multiple_jobs_test() {
         .filter_level(LevelFilter::Info)
         .try_init();
 
-    let (mut api_client, guard) = start_server().await;
+    let (mut api_client, guard) = start_server(true).await;
 
     let mut receiver = api_client
         .subscribe_job_status_stream(JobStatusStreamRequest { id: 0 })
@@ -177,7 +194,7 @@ async fn one_job_test() {
 
     let path = env::current_dir().unwrap();
     info!("Path: {:?}", path);
-    let (mut api_client, guard) = start_server().await;
+    let (mut api_client, guard) = start_server(true).await;
 
     let config = api_client
         .get_config(GetConfigRequest {})

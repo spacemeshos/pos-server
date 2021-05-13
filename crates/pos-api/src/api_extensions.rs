@@ -161,12 +161,12 @@ impl Display for Job {
         if self.status == JobStatus::Completed as i32 {
             let time = stopped.sub(started);
             if time.num_seconds() == 0 {
-                write!(f, "Completed in less than 1 second.",)?;
+                write!(f, "completed in less than 1 second.",)?;
             } else {
                 let bytes_per_sec = self.size_bits / (time.num_seconds() as u64 * 8);
                 write!(
                     f,
-                    "Completed. work duration: {} Secs. Bytes/sec: {}. ",
+                    "completed. work duration: {} Secs. Bytes/sec: {}. ",
                     time.num_seconds(),
                     bytes_per_sec
                 )?;
@@ -175,17 +175,15 @@ impl Display for Job {
 
         write!(f, "data written (bits): {}. ", self.bits_written)?;
         write!(f, "client id: {}. ", hex::encode(self.client_id.clone()))?;
-
         if let Some(err) = self.last_error.as_ref() {
             write!(f, "last Error: {}, {}. ", err.error, err.message)?;
         }
 
         write!(f, "gpu id: {}. ", self.compute_provider_id)?;
-
         if self.pow_solution_index == u64::MAX {
-            write!(f, "pow solution not found")?;
+            write!(f, "pow solution not found. ")?;
         } else {
-            write!(f, "pow solution index: {}. ", self.pow_solution_index)?;
+            write!(f, "🏁 pow solution index: {}. ", self.pow_solution_index)?;
         }
 
         write!(
