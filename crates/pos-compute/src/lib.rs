@@ -23,24 +23,6 @@ pub struct PosComputeProvider {
     pub compute_api: u32, // A provided compute api
 }
 
-/*
-   uint32_t provider_id,		// POST compute provider ID
-   const uint8_t *id,			// 32 bytes
-   uint64_t start_position,	    // e.g. 0
-   uint64_t end_position,		// e.g. 49,999
-   uint32_t hash_len_bits,		// (1...256) for each hash output, the number of prefix bits (not bytes) to copy into the buffer
-   const uint8_t *salt,		    // 32 bytes
-   uint32_t options,			// compute leafs and or compute pow
-   uint8_t *out,				// memory buffer large enough to include hash_len_bits * number of requested hashes
-   uint32_t N,					// scrypt N
-   uint32_t R,					// scrypt r
-   uint32_t P,					// scrypt p
-   uint8_t *D,					// Target D for the POW computation. 256 bits.
-   uint64_t *idx_solution,		// index of output where output < D if POW compute was on. MAX_UINT64 otherwise.
-   uint64_t *hashes_computed,	//
-   uint64_t *hashes_per_sec	    //
-*/
-
 #[link(name = "gpu-setup")]
 extern "C" {
     fn scryptPositions(

@@ -5,7 +5,6 @@ use std::{fs, io};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::env::set_var("OUT_DIR", "src");
 
-    /*
     tonic_build::configure()
         .build_server(true)
         .out_dir("src")
@@ -15,11 +14,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let src = Path::new("src");
     remame_protos(&src).unwrap();
-    */
+
     Ok(())
 }
 
-fn _remame_protos(dir: &Path) -> io::Result<()> {
+fn remame_protos(dir: &Path) -> io::Result<()> {
     if dir.is_dir() {
         for entry in fs::read_dir(dir)? {
             let entry = entry?;

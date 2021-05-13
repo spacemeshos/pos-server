@@ -22,10 +22,11 @@ use xactor::*;
 
 const DEFAULT_GRPC_PORT: u32 = 6667;
 const DEFAULT_HOST: &str = "[::1]";
-const DEFAULT_INDEXED_PER_CYCLE: u64 = 9 * 128 * 1024;
+const DEFAULT_INDEXES_PER_CYCLE: u64 = 1024; // 9 * 128 * 1024;
 const DEFAULT_BITS_PER_INDEX: u32 = 8;
 const DEFAULT_SALT: &str = "114a00005de29b0aaad6814e5f33d357686da48923e8e4864ee5d6e20053e886";
-const DEFAULT_D: &str = "0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+
+// "0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -66,13 +67,12 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
 async fn start_server(config: Config) -> Result<()> {
     // init the server (one-time per process, pre config)
-    let use_cpu_providers = config.get_bool("use_cpu_providers").unwrap();
+    let use_cpu_provider = config.get_bool("use_cpu_provider").unwrap();
     let server = PosServer::from_registry().await?;
-    server.call(Init { use_cpu_providers }).await??;
+    server.call(Init { use_cpu_provider }).await??;
 
     // set server config
     let salt = hex::decode(config.get_str("salt").unwrap()).unwrap();
-    let d = hex::decode(config.get_str("d").unwrap()).unwrap();
     use pos_api::api::Config;
     server
         .call(SetConfig(Config {
@@ -84,7 +84,6 @@ async fn start_server(config: Config) -> Result<()> {
             n: config.get_int("n").unwrap() as u32,
             r: config.get_int("r").unwrap() as u32,
             p: config.get_int("p").unwrap() as u32,
-            d,
         }))
         .await??;
 
@@ -146,18 +145,18 @@ fn init_logging() {
     builder.init();
 }
 
+/// Returns the default server configuration.
+/// When a config file is provided, config params override the default config.
 fn get_default_config() -> config::Config {
     let mut config = Config::default();
     config
         .set_default("data_dir", "./")
         .unwrap()
-        .set_default("indexes_per_cycle", DEFAULT_INDEXED_PER_CYCLE.to_string())
+        .set_default("indexes_per_cycle", DEFAULT_INDEXES_PER_CYCLE.to_string())
         .unwrap()
         .set_default("bits_per_index", DEFAULT_BITS_PER_INDEX.to_string())
         .unwrap()
         .set_default("salt", DEFAULT_SALT)
-        .unwrap()
-        .set_default("d", DEFAULT_D)
         .unwrap()
         .set_default("port", DEFAULT_GRPC_PORT.to_string())
         .unwrap()
@@ -169,7 +168,7 @@ fn get_default_config() -> config::Config {
         .unwrap()
         .set_default("p", 1.to_string())
         .unwrap()
-        .set_default("use_cpu_providers", false.to_string())
+        .set_default("use_cpu_provider", true.to_string())
         .unwrap()
         .clone()
 }

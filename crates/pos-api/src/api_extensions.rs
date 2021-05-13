@@ -181,6 +181,17 @@ impl Display for Job {
         }
 
         write!(f, "gpu id: {}. ", self.compute_provider_id)?;
-        write!(f, "pow index: {}.", self.proof_of_work_index)
+
+        if self.pow_solution_index == u64::MAX {
+            write!(f, "pow solution not found")?;
+        } else {
+            write!(f, "pow solution index: {}. ", self.pow_solution_index)?;
+        }
+
+        write!(
+            f,
+            "pow difficulty: {}.",
+            hex::encode(self.pow_difficulty.clone())
+        )
     }
 }

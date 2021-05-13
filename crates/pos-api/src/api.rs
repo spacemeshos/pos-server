@@ -1,8 +1,9 @@
 /// Service configuration
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Config {
-    /// The directory where pos data files are created
-    /// Path must be accessible by the server
+    /// The directory where pos data files are created.
+    /// Path must be accessible by the server.
+    /// data.json will be created in the pos data folder. It will contain the index of the pow solution.
     #[prost(string, tag = "1")]
     pub data_dir: ::prost::alloc::string::String,
     /// number of indexes to compute per gpu compute cycle. e.g. 1024^4
@@ -23,9 +24,6 @@ pub struct Config {
     /// scrypt param
     #[prost(uint32, tag = "7")]
     pub p: u32,
-    /// target difficulty, 32 bytes
-    #[prost(bytes = "vec", tag = "8")]
-    pub d: ::prost::alloc::vec::Vec<u8>,
 }
 /// A pos compute provider such as a GPU or a CPU
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -112,12 +110,15 @@ pub struct Job {
     /// unique client id (input to pos algorithm)
     #[prost(bytes = "vec", tag = "12")]
     pub client_id: ::prost::alloc::vec::Vec<u8>,
-    /// index of the pow solution index. Only available for complete jobs
-    #[prost(uint64, tag = "13")]
-    pub proof_of_work_index: u64,
     /// compute provider processor id which executed this job - useful for debugging when job fail
-    #[prost(uint32, tag = "14")]
+    #[prost(uint32, tag = "13")]
     pub compute_provider_id: u32,
+    /// pow target difficulty, 32 bytes
+    #[prost(bytes = "vec", tag = "14")]
+    pub pow_difficulty: ::prost::alloc::vec::Vec<u8>,
+    /// index of the pow solution index. Only available for complete jobs
+    #[prost(uint64, tag = "15")]
+    pub pow_solution_index: u64,
 }
 /// Nested message and enum types in `Job`.
 pub mod job {
@@ -197,6 +198,9 @@ pub struct AddJobRequest {
     /// a name set by client to identify the job
     #[prost(string, tag = "4")]
     pub friendly_name: ::prost::alloc::string::String,
+    /// target difficulty, 32 bytes
+    #[prost(bytes = "vec", tag = "5")]
+    pub pow_difficulty: ::prost::alloc::vec::Vec<u8>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AddJobResponse {

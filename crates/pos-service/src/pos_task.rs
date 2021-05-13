@@ -1,7 +1,7 @@
 use crate::server::{PosServer, UpdateJobStatus};
 use anyhow::{bail, Result};
 use pos_api::api::job::JobStatus;
-use pos_api::api::{Job, JobError};
+use pos_api::api::{Config, Job, JobError};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufWriter;
@@ -42,6 +42,65 @@ impl PosServer {
         let _ = PosServer::update_job_status(job);
     }
 
+    /// Find a pow solution for a job starting at start_idx.
+    /// Returns the solution index or error.
+    /// Helper function used by the main pos task.
+    fn find_pow_solution(
+        job: &Job,
+        config: &Config,
+        start_idx: u64,
+        buffer: &mut Vec<u8>,
+    ) -> Result<u64> {
+        let mut idx_solution = u64::MAX;
+        let mut idx = start_idx;
+        let mut hashes_computed: u64 = 0;
+        let mut hashes_per_sec: u64 = 0;
+
+        while idx_solution == u64::MAX {
+            let end_idx = idx + config.indexes_per_compute_cycle - 1;
+
+            info!(
+                "finding pow solution at index: {}. {} positions.",
+                idx,
+                end_idx + 1 - idx
+            );
+
+            let res = compute_pos(
+                job.compute_provider_id,
+                job.client_id.as_ref(),
+                idx,
+                end_idx,
+                config.bits_per_index,
+                config.salt.as_ref(),
+                ComputeOptions::ComputePow as u32,
+                buffer,
+                config.n,
+                config.r,
+                config.p,
+                job.pow_difficulty.as_ref(),
+                &mut idx_solution as *mut u64,
+                &mut hashes_computed as *mut u64,
+                &mut hashes_per_sec as *mut u64,
+            );
+
+            if res != ComputeResults::NoError as i32
+                && res != ComputeResults::PowSolutionFound as i32
+            {
+                let result = ComputeResults::try_from(res).unwrap();
+                bail!("pow compute error: {}", result);
+            }
+
+            if res == ComputeResults::PowSolutionFound as i32 {
+                if idx_solution == u64::MAX {
+                    bail!("pow compute error. Unexpected result pow solution found but solution index is not set");
+                }
+            }
+            idx += config.indexes_per_compute_cycle;
+        }
+
+        Ok(idx_solution)
+    }
+
     /// Start a pos data file creation task for a job
     pub(crate) async fn start_task(&mut self, job: &Job) -> Result<Job> {
         if self.providers_pool.is_empty() {
@@ -63,6 +122,7 @@ impl PosServer {
         let provider_id = self.providers_pool.pop().unwrap();
         let mut task_job = job.clone();
 
+        task_job.pow_solution_index = u64::MAX;
         task_job.started = datetime::Instant::now().seconds() as u64;
         task_job.status = JobStatus::Started as i32;
         task_job.compute_provider_id = provider_id;
@@ -103,9 +163,10 @@ impl PosServer {
             };
 
             let mut file_writer = BufWriter::new(file);
+            let mut start_idx = 0;
 
             for i in 0..iterations {
-                let start_idx = i * task_config.indexes_per_compute_cycle;
+                start_idx = i * task_config.indexes_per_compute_cycle;
                 let end_idx = start_idx + task_config.indexes_per_compute_cycle - 1;
 
                 info!(
@@ -118,6 +179,13 @@ impl PosServer {
                     end_idx
                 );
 
+                let options = match task_job.pow_solution_index {
+                    u64::MAX => {
+                        ComputeOptions::ComputeLeaves as u32 | ComputeOptions::ComputePow as u32
+                    }
+                    _ => ComputeOptions::ComputeLeaves as u32,
+                };
+
                 let res = compute_pos(
                     task_job.compute_provider_id,
                     task_job.client_id.as_ref(),
@@ -125,19 +193,26 @@ impl PosServer {
                     end_idx,
                     task_config.bits_per_index,
                     task_config.salt.as_ref(),
-                    ComputeOptions::ComputeLeaves as u32, // compute leaves for now
+                    options,
                     &mut buffer,
                     task_config.n,
                     task_config.r,
                     task_config.p,
-                    task_config.d.as_ref(),
+                    task_job.pow_difficulty.as_ref(),
                     &mut idx_solution as *mut u64,
                     &mut hashes_computed as *mut u64,
                     &mut hashes_per_sec as *mut u64,
                 );
 
-                let result = ComputeResults::try_from(res).unwrap();
+                if task_job.pow_solution_index == u64::MAX && idx_solution != u64::MAX {
+                    info!(
+                        ">>> found pow solution at index while computing leaves at: {}",
+                        idx_solution
+                    );
+                    task_job.pow_solution_index = idx_solution;
+                }
 
+                let result = ComputeResults::try_from(res).unwrap();
                 info!("compute result: {}", result);
 
                 if res != ComputeResults::NoError as i32 {
@@ -182,7 +257,7 @@ impl PosServer {
                 let _ = PosServer::update_job_status(&task_job);
             }
 
-            info!("compute finished {}", task_job.id);
+            info!("leaves compute finished {}", task_job.id);
 
             if let Err(e) = file_writer.flush() {
                 PosServer::task_error(
@@ -191,6 +266,26 @@ impl PosServer {
                     format!("error flushing pos file {}. {}.", path.display(), e),
                 );
                 return;
+            }
+
+            if task_job.pow_solution_index == u64::MAX {
+                // pow solution not found yet - look for it starting at start_index using existing buffer so
+                // no additional memory allocation is needed
+                match PosServer::find_pow_solution(&task_job, &task_config, start_idx, &mut buffer)
+                {
+                    Ok(solution) => {
+                        info!(">>>> Pow solution found at index: {}", solution);
+                        task_job.pow_solution_index = solution;
+                    }
+                    Err(e) => {
+                        PosServer::task_error(
+                            &mut task_job,
+                            501,
+                            format!("error computing pow solution {}", e),
+                        );
+                        return;
+                    }
+                }
             }
 
             if task_job.status == JobStatus::Started as i32 {

@@ -1,5 +1,5 @@
 use crate::api::pos_grpc_service::PosGrpcService;
-use crate::{DEFAULT_BITS_PER_INDEX, DEFAULT_D, DEFAULT_INDEXED_PER_CYCLE, DEFAULT_SALT};
+use crate::{DEFAULT_BITS_PER_INDEX, DEFAULT_INDEXES_PER_CYCLE, DEFAULT_SALT};
 use anyhow::{bail, Result};
 use pos_api::api::job::JobStatus;
 use pos_api::api::pos_data_service_server::PosDataServiceServer;
@@ -50,13 +50,12 @@ impl Default for PosServer {
             jobs: Default::default(),
             config: Config {
                 data_dir: "./".to_string(),
-                indexes_per_compute_cycle: DEFAULT_INDEXED_PER_CYCLE,
+                indexes_per_compute_cycle: DEFAULT_INDEXES_PER_CYCLE,
                 bits_per_index: DEFAULT_BITS_PER_INDEX,
                 salt: hex::decode(DEFAULT_SALT).unwrap(),
                 n: 512,
                 r: 1,
                 p: 1,
-                d: hex::decode(DEFAULT_D).unwrap(),
             },
             providers_pool: vec![],
             job_status_subscribers: HashMap::default(),
@@ -67,7 +66,7 @@ impl Default for PosServer {
 #[message(result = "Result<()>")]
 pub(crate) struct Init {
     /// server base config - must be set when initializing
-    pub(crate) use_cpu_providers: bool,
+    pub(crate) use_cpu_provider: bool,
 }
 
 /// Init the service
@@ -75,7 +74,7 @@ pub(crate) struct Init {
 impl Handler<Init> for PosServer {
     async fn handle(&mut self, _ctx: &mut Context<Self>, msg: Init) -> Result<()> {
         for p in get_providers() {
-            if !msg.use_cpu_providers && p.compute_api == COMPUTE_API_CLASS_CPU {
+            if !msg.use_cpu_provider && p.compute_api == COMPUTE_API_CLASS_CPU {
                 info!(
                     "skipping cpu provider id: {}, model: {}, compute_api: {}",
                     p.id,
@@ -84,6 +83,12 @@ impl Handler<Init> for PosServer {
                 );
                 continue;
             }
+
+            if msg.use_cpu_provider && p.compute_api != COMPUTE_API_CLASS_CPU {
+                info!("Skipping non-cpu provider. {}: {}", p.id, p.model);
+                continue;
+            }
+
             info!(
                 "Adding to pool provider id: {}, model: {}, compute_api: {}",
                 p.id,
@@ -95,7 +100,7 @@ impl Handler<Init> for PosServer {
         }
 
         if self.providers.is_empty() {
-            bail!("no compute providers are available on the system.")
+            bail!("no compatible compute providers are available on the system.")
         }
 
         Ok(())
@@ -225,7 +230,6 @@ impl Handler<UpdateJobStatus> for PosServer {
 #[message(result = "Result<Job>")]
 pub(crate) struct AddJob(pub(crate) AddJobRequest);
 
-/// Set the pos compute config
 #[async_trait::async_trait]
 impl Handler<AddJob> for PosServer {
     async fn handle(&mut self, _ctx: &mut Context<Self>, msg: AddJob) -> Result<Job> {
@@ -242,8 +246,9 @@ impl Handler<AddJob> for PosServer {
             last_error: None,
             friendly_name: data.friendly_name,
             client_id: data.client_id,
-            proof_of_work_index: u64::MAX,
             compute_provider_id: u32::MAX,
+            pow_difficulty: data.pow_difficulty,
+            pow_solution_index: u64::MAX,
         };
 
         if let Err(e) = job.validate(

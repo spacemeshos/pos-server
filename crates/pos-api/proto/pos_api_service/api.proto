@@ -37,8 +37,9 @@ service PosDataService {
 
 // Service configuration
 message Config {
-  // The directory where pos data files are created
-  // Path must be accessible by the server
+  // The directory where pos data files are created.
+  // Path must be accessible by the server.
+  // data.json will be created in the pos data folder. It will contain the index of the pow solution.
   string data_dir = 1;
   uint64 indexes_per_compute_cycle = 2; // number of indexes to compute per gpu compute cycle. e.g. 1024^4
   uint32 bits_per_index = 3; // should be 8 for now
@@ -46,7 +47,6 @@ message Config {
   uint32 N = 5; // scrypt param
   uint32 R = 6; // scrypt param
   uint32 P = 7; // scrypt param
-  bytes  D = 8; // target difficulty, 32 bytes
 }
 
 // A pos compute provider such as a GPU or a CPU
@@ -109,8 +109,9 @@ message Job {
   JobError last_error = 10; // last error string if job stopped due to an error or empty otherwise
   string friendly_name = 11; // client provided friendly name e.g. 'my pos 1'
   bytes  client_id = 12; // unique client id (input to pos algorithm)
-  uint64 proof_of_work_index = 13; // index of the pow solution index. Only available for complete jobs
-  uint32 compute_provider_id = 14; // compute provider processor id which executed this job - useful for debugging when job fail
+  uint32 compute_provider_id = 13; // compute provider processor id which executed this job - useful for debugging when job fail
+  bytes  pow_difficulty = 14; // pow target difficulty, 32 bytes
+  uint64 pow_solution_index = 15; // index of the pow solution index. Only available for complete jobs
 }
 
 message JobError {
@@ -154,6 +155,7 @@ message AddJobRequest {
   uint64 post_size_bits = 2; // requested pos size in bits
   uint64 start_index = 3; // optional start index - used to continue a stopped job
   string friendly_name = 4; // a name set by client to identify the job
+  bytes  pow_difficulty = 5; // target difficulty, 32 bytes
 }
 
 message AddJobResponse {

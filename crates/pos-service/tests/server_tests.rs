@@ -56,6 +56,14 @@ async fn start_server() -> (PosDataServiceClient<Channel>, Guard) {
 
 #[tokio::test]
 async fn multiple_jobs_test() {
+    const POST_SIZE_BITS: u64 = 8192 * 32;
+
+    let pow_difficulty: Vec<u8> = vec![
+        0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff,
+    ]; // 32 bytes pattern
+
     let _ = env_logger::builder()
         .is_test(false)
         .filter_level(LevelFilter::Info)
@@ -76,9 +84,10 @@ async fn multiple_jobs_test() {
         let _ = api_client
             .add_job(AddJobRequest {
                 client_id: client_id.clone(),
-                post_size_bits: 9 * 128 * 1024 * 4 * 8,
+                post_size_bits: POST_SIZE_BITS, // 8192, 32 * 1024 * 8, // 9 * 128 * 1024 * 4 * 8,
                 start_index: 0,
                 friendly_name: format!("job {}", i),
+                pow_difficulty: pow_difficulty.clone(),
             })
             .await;
     }
@@ -153,6 +162,14 @@ fn delete_pos_files(jobs: &Vec<Job>, data_dir: String) {
 
 #[tokio::test]
 async fn one_job_test() {
+    const POST_SIZE_BITS: u64 = 8192 * 64;
+
+    let pow_difficulty: Vec<u8> = vec![
+        0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff,
+    ]; // 32 bytes pattern
+
     let _ = env_logger::builder()
         .is_test(false)
         .filter_level(LevelFilter::Info)
@@ -160,7 +177,6 @@ async fn one_job_test() {
 
     let path = env::current_dir().unwrap();
     info!("Path: {:?}", path);
-
     let (mut api_client, guard) = start_server().await;
 
     let config = api_client
@@ -194,9 +210,10 @@ async fn one_job_test() {
     let resp = api_client
         .add_job(AddJobRequest {
             client_id,
-            post_size_bits: 9 * 128 * 1024 * 4 * 8,
+            post_size_bits: POST_SIZE_BITS, // 32 * 1024 * 8, //9 * 128 * 1024 * 4 * 8,
             start_index: 0,
             friendly_name: "world's first pos".to_string(),
+            pow_difficulty,
         })
         .await
         .unwrap()
