@@ -116,7 +116,7 @@ pub struct Job {
     /// pow target difficulty, 32 bytes
     #[prost(bytes = "vec", tag = "14")]
     pub pow_difficulty: ::prost::alloc::vec::Vec<u8>,
-    /// index of the pow solution index. Only available for complete jobs
+    /// index of the pow solution index. Only available for a completed job. u64:MAX means no solution.
     #[prost(uint64, tag = "15")]
     pub pow_solution_index: u64,
 }
@@ -184,21 +184,22 @@ pub struct GetJobStatusResponse {
     #[prost(message, optional, tag = "1")]
     pub job: ::core::option::Option<Job>,
 }
+/// A client request to schedule a job for execution on the server
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AddJobRequest {
-    /// unique client id (input to pos algo)
+    /// Unique client id (input to pos algo)
     #[prost(bytes = "vec", tag = "1")]
     pub client_id: ::prost::alloc::vec::Vec<u8>,
-    /// requested pos size in bits
+    /// Requested pos size in bits
     #[prost(uint64, tag = "2")]
     pub post_size_bits: u64,
-    /// optional start index - used to continue a stopped job
+    /// Optional start index - used to continue a stopped job
     #[prost(uint64, tag = "3")]
     pub start_index: u64,
-    /// a name set by client to identify the job
+    /// A name set by client to identify the job
     #[prost(string, tag = "4")]
     pub friendly_name: ::prost::alloc::string::String,
-    /// target difficulty, 32 bytes
+    /// Target pow difficulty, 32 bytes
     #[prost(bytes = "vec", tag = "5")]
     pub pow_difficulty: ::prost::alloc::vec::Vec<u8>,
 }

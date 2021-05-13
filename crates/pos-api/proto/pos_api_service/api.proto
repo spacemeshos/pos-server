@@ -111,7 +111,7 @@ message Job {
   bytes  client_id = 12; // unique client id (input to pos algorithm)
   uint32 compute_provider_id = 13; // compute provider processor id which executed this job - useful for debugging when job fail
   bytes  pow_difficulty = 14; // pow target difficulty, 32 bytes
-  uint64 pow_solution_index = 15; // index of the pow solution index. Only available for complete jobs
+  uint64 pow_solution_index = 15; // index of the pow solution index. Only available for a completed job. u64:MAX means no solution.
 }
 
 message JobError {
@@ -150,12 +150,13 @@ message GetJobStatusResponse {
   Job Job = 1;
 }
 
+// A client request to schedule a job for execution on the server
 message AddJobRequest {
-  bytes  client_id = 1; // unique client id (input to pos algo)
-  uint64 post_size_bits = 2; // requested pos size in bits
-  uint64 start_index = 3; // optional start index - used to continue a stopped job
-  string friendly_name = 4; // a name set by client to identify the job
-  bytes  pow_difficulty = 5; // target difficulty, 32 bytes
+  bytes  client_id = 1; // Unique client id (input to pos algo)
+  uint64 post_size_bits = 2; // Requested pos size in bits
+  uint64 start_index = 3; // Optional start index - used to continue a stopped job
+  string friendly_name = 4; // A name set by client to identify the job
+  bytes  pow_difficulty = 5; // Target pow difficulty, 32 bytes
 }
 
 message AddJobResponse {

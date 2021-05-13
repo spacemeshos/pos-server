@@ -42,14 +42,14 @@ impl PosServer {
         let _ = PosServer::update_job_status(job);
     }
 
-    /// Find a pow solution for a job starting at start_idx.
-    /// Returns the solution index or error.
-    /// Helper function used by the main pos task.
+    /// Find a pow pow solution for a job starting at start_idx.
+    /// Returns the solution index or an error.
+    /// A helper function used by the main pos task.
     fn find_pow_solution(
         job: &Job,
         config: &Config,
         start_idx: u64,
-        buffer: &mut Vec<u8>,
+        buffer: &mut Vec<u8>, // caller buffer so no additional allocations are needed
     ) -> Result<u64> {
         let mut idx_solution = u64::MAX;
         let mut idx = start_idx;
@@ -58,9 +58,8 @@ impl PosServer {
 
         while idx_solution == u64::MAX {
             let end_idx = idx + config.indexes_per_compute_cycle - 1;
-
             info!(
-                "finding pow solution at index: {}. {} positions.",
+                "Searching for pow solution at index: {}. {} positions.",
                 idx,
                 end_idx + 1 - idx
             );
@@ -92,49 +91,52 @@ impl PosServer {
 
             if res == ComputeResults::PowSolutionFound as i32 {
                 if idx_solution == u64::MAX {
-                    bail!("pow compute error. Unexpected result pow solution found but solution index is not set");
+                    bail!(
+                        "pow compute error. Pow solution found but solution index was not updated"
+                    );
                 }
             }
             idx += config.indexes_per_compute_cycle;
+
+            // todo: return error result if idx is too large (many iterations have been executed). Figure out what's the probability of this happening.
         }
 
         Ok(idx_solution)
     }
 
-    /// Start a pos data file creation task for a job
+    /// Start a pos data creation task for a pos job
     pub(crate) async fn start_task(&mut self, job: &Job) -> Result<Job> {
         if self.providers_pool.is_empty() {
             error!(
                 "unexpected condition: no available provider. can't process job {}",
                 job.id
             );
-            bail!("no available provider");
+            bail!("no available provider for job execution");
         }
 
         if let Err(e) = job.validate(
             self.config.indexes_per_compute_cycle,
             self.config.bits_per_index,
         ) {
-            error!("job won't run. validation failed. {}, {}", job, e);
+            error!("Invalid submitted job {}, {}", job, e);
             return Err(e);
         }
 
         let provider_id = self.providers_pool.pop().unwrap();
         let mut task_job = job.clone();
-
         task_job.pow_solution_index = u64::MAX;
         task_job.started = datetime::Instant::now().seconds() as u64;
         task_job.status = JobStatus::Started as i32;
         task_job.compute_provider_id = provider_id;
 
         self.jobs.insert(job.id, task_job.clone());
-        // return job with updated data
+        // Job with updated data to return to caller (pre task completion)
         let res_job = task_job.clone();
         let task_config = self.config.clone();
 
         info!("starting task for job {}...", task_job.id);
 
-        // span a blocking task since the compute lib computation is blocking
+        // span a blocking task since the compute lib is blocking
         let _handle = task::spawn_blocking(move || {
             let bits_per_cycle =
                 task_config.indexes_per_compute_cycle * task_config.bits_per_index as u64;
@@ -146,7 +148,7 @@ impl PosServer {
             let mut hashes_per_sec: u64 = 0;
             let mut idx_solution: u64 = u64::MAX;
 
-            // for now we create file called <job_id>.pos in the dest data folder
+            // Pos will be saved in a file called <job_id>.pos in the dest data directory
             let path = Path::new(task_config.data_dir.as_str())
                 .join(Path::new(format!("{}.pos", task_job.id).as_str()));
 
@@ -206,16 +208,15 @@ impl PosServer {
 
                 if task_job.pow_solution_index == u64::MAX && idx_solution != u64::MAX {
                     info!(
-                        ">>> found pow solution at index while computing leaves at: {}",
+                        "🏁 found pow solution at index while computing leaves at: {}",
                         idx_solution
                     );
                     task_job.pow_solution_index = idx_solution;
                 }
 
-                let result = ComputeResults::try_from(res).unwrap();
-                info!("compute result: {}", result);
-
                 if res != ComputeResults::NoError as i32 {
+                    let result = ComputeResults::try_from(res).unwrap();
+                    info!("compute result: {}", result);
                     PosServer::task_error(
                         &mut task_job,
                         501,
@@ -274,7 +275,7 @@ impl PosServer {
                 match PosServer::find_pow_solution(&task_job, &task_config, start_idx, &mut buffer)
                 {
                     Ok(solution) => {
-                        info!(">>>> Pow solution found at index: {}", solution);
+                        info!("🏁 Pow solution found at index: {}", solution);
                         task_job.pow_solution_index = solution;
                     }
                     Err(e) => {
