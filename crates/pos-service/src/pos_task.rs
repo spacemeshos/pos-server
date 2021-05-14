@@ -136,7 +136,7 @@ impl PosServer {
 
         info!("starting task for job {}...", task_job.id);
 
-        // span a blocking task since the compute lib is blocking
+        // spawn a blocking task since the compute lib is blocking
         let _handle = task::spawn_blocking(move || {
             let bits_per_cycle =
                 task_config.indexes_per_compute_cycle * task_config.bits_per_index as u64;
