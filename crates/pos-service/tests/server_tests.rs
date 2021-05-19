@@ -288,7 +288,7 @@ async fn rig_test() {
         .filter_level(LevelFilter::Info)
         .try_init();
 
-    let (mut api_client, guard) = start_server(true).await;
+    let (mut api_client, guard) = start_server(false).await;
 
     // Update default config
     let mut config = api_client
