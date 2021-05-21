@@ -24,10 +24,14 @@ make
 make test
 ```
 
-## Using
-1. Configure and deploy the server on a system with one or more supported compute providers.
+## Running
+1. Copy all gpu-lib artifacts to `pos-service` executable directory.
+1. Add the gpu-post dynamic lib path to your system's dynamic lib path. macOS: `export DYLD_LIBRARY_PATH=.:$DYLD_LIBRARY_PATH`. linux: use LD_LIBRARY_PATH.
+1. Execute the `pos-service` process.
 1. Use any GRPC client to connect to the server's GRPC service.
-1. Call the [service's methods]((https://github.com/spacemeshos/pos-server/blob/main/crates/pos-api/proto/pos_api_service/api.proto) from your client.
+1. Call the [service's methods](https://github.com/spacemeshos/pos-server/blob/main/crates/pos-api/proto/pos_api_service/api.proto) from your client.
+
+---
 
 ## Design
 - The core pos data computation is done by the [gpu-post](https://github.com/spacemeshos/gpu-post) c library. The library is wrapped as a Rust library module for access from other Rust modules in the `pos-compute` crate.
