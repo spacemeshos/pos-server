@@ -1,6 +1,6 @@
 COLOR ?= auto # Valid COLOR options: {always, auto, never}
 CARGO = RUSTFLAGS="-L ./crates/pos-compute/resources" cargo --color $(COLOR)
-CARGO_TEST =  RUSTFLAGS="-L ./target/debug" cargo test --test server_tests rig_test --all-features --manifest-path ./crates/pos-service/Cargo.toml -- --nocapture --show-output --test-threads=1
+CARGO_TEST =  RUSTFLAGS="-L ./crates/pos-compute/resources" cargo test --test server_tests rig_test --all-features --manifest-path ./crates/pos-service/Cargo.toml -- --nocapture --show-output --test-threads=1
 
 .PHONY: all bench build check clean doc install publish run test update format
 
