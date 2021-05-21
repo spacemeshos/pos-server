@@ -318,8 +318,8 @@ async fn rig_test() {
 
     let client_id = hex::decode("1215eda121").unwrap();
     // start 16 jobs
-    let total_jobs = 16;
-    for i in 0..total_jobs {
+    let jobs_count = 16;
+    for i in 0..jobs_count {
         let _ = api_client
             .add_job(AddJobRequest {
                 client_id: client_id.clone(),
@@ -339,9 +339,9 @@ async fn rig_test() {
 
     assert_eq!(
         all_jobs_response.jobs.len(),
-        total_jobs,
+        jobs_count,
         "expected {} queued jobs",
-        total_jobs
+        jobs_count
     );
 
     // print status and wait for all jobs to complete
@@ -352,15 +352,15 @@ async fn rig_test() {
                 let job = job_status.job.unwrap();
                 match job.status.try_into().unwrap() {
                     JobStatus::Completed => {
-                        info!("🎉 completed. job {}", job);
+                        info!("🎉🎉 completed. job {}", job);
                         completed_jobs += 1;
-                        if completed_jobs == total_jobs {
+                        if completed_jobs == jobs_count {
                             info!("all jobs completed");
                             break;
                         }
                     }
                     JobStatus::Stopped => {
-                        panic!("💥 job stopped due to error: {}", job)
+                        panic!("💥💥 job stopped due to error: {}", job)
                     }
                     JobStatus::Queued => {
                         info!("job queued: {}", job);
@@ -370,7 +370,7 @@ async fn rig_test() {
                     }
                 }
             }
-            Err(e) => panic!("💥 server error {}", e),
+            Err(e) => panic!("💥💥 server error {}", e),
         }
     }
 

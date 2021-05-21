@@ -208,7 +208,7 @@ impl PosServer {
 
                 if task_job.pow_solution_index == u64::MAX && idx_solution != u64::MAX {
                     info!(
-                        "🏁 found pow solution at index while computing leaves at: {}",
+                        "🍻 found pow solution at index while computing leaves at: {}",
                         idx_solution
                     );
                     task_job.pow_solution_index = idx_solution;
@@ -277,7 +277,7 @@ impl PosServer {
                 match PosServer::find_pow_solution(&task_job, &task_config, start_idx, &mut buffer)
                 {
                     Ok(solution) => {
-                        info!("🏁 Pow solution found at index: {}", solution);
+                        info!("🍻 Pow solution found at index: {}", solution);
                         task_job.pow_solution_index = solution;
                     }
                     Err(e) => {
