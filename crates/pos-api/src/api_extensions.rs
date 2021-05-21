@@ -183,7 +183,7 @@ impl Display for Job {
         if self.pow_solution_index == u64::MAX {
             write!(f, "pow solution not found. ")?;
         } else {
-            write!(f, "🏁 pow solution index: {}. ", self.pow_solution_index)?;
+            write!(f, "🍻 pow solution index: {}. ", self.pow_solution_index)?;
         }
 
         write!(

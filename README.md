@@ -19,6 +19,7 @@ make
 ```
 
 ## Testing
+Copy all file from `crates/pos-compute/resources/` to `target/debug/`.
 
 ```bash
 make test
