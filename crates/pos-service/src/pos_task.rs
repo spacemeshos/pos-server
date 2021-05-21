@@ -214,7 +214,9 @@ impl PosServer {
                     task_job.pow_solution_index = idx_solution;
                 }
 
-                if res != ComputeResults::NoError as i32 {
+                if res != ComputeResults::NoError as i32
+                    && res != ComputeResults::PowSolutionFound as i32
+                {
                     let result = ComputeResults::try_from(res).unwrap();
                     info!("compute result: {}", result);
                     PosServer::task_error(
