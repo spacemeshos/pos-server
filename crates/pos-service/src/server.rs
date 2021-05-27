@@ -249,6 +249,7 @@ impl Handler<AddJob> for PosServer {
             compute_provider_id: u32::MAX,
             pow_difficulty: data.pow_difficulty,
             pow_solution_index: u64::MAX,
+            compute_pow_solution: data.compute_pow_solution,
         };
 
         if let Err(e) = job.validate(

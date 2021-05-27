@@ -112,6 +112,8 @@ message Job {
   uint32 compute_provider_id = 13; // compute provider processor id which executed this job - useful for debugging when job fail
   bytes  pow_difficulty = 14; // pow target difficulty, 32 bytes
   uint64 pow_solution_index = 15; // index of the pow solution index. Only available for a completed job. u64:MAX means no solution.
+  bool compute_pow_solution = 16; // when false, job will only compute leaves. When true, job will compute leaves and a pow solution
+
 }
 
 message JobError {
@@ -157,6 +159,7 @@ message AddJobRequest {
   uint64 start_index = 3; // Optional start index - used to continue a stopped job
   string friendly_name = 4; // A name set by client to identify the job
   bytes  pow_difficulty = 5; // Target pow difficulty, 32 bytes
+  bool compute_pow_solution = 6; // when false, job will only compute leaves. When true, job will compute leaves and a pow solution
 }
 
 message AddJobResponse {

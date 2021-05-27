@@ -181,11 +181,14 @@ impl PosServer {
                     end_idx
                 );
 
-                let options = match task_job.pow_solution_index {
-                    u64::MAX => {
-                        ComputeOptions::ComputeLeaves as u32 | ComputeOptions::ComputePow as u32
-                    }
-                    _ => ComputeOptions::ComputeLeaves as u32,
+                let options = match task_job.compute_pow_solution {
+                    true => match task_job.pow_solution_index {
+                        u64::MAX => {
+                            ComputeOptions::ComputeLeaves as u32 | ComputeOptions::ComputePow as u32
+                        }
+                        _ => ComputeOptions::ComputeLeaves as u32,
+                    },
+                    false => ComputeOptions::ComputeLeaves as u32,
                 };
 
                 let res = compute_pos(
@@ -206,9 +209,12 @@ impl PosServer {
                     &mut hashes_per_sec as *mut u64,
                 );
 
-                if task_job.pow_solution_index == u64::MAX && idx_solution != u64::MAX {
+                if task_job.compute_pow_solution
+                    && task_job.pow_solution_index == u64::MAX
+                    && idx_solution != u64::MAX
+                {
                     info!(
-                        "🍻 found pow solution at index while computing leaves at: {}",
+                        "👊 found pow solution at index while computing leaves at: {}",
                         idx_solution
                     );
                     task_job.pow_solution_index = idx_solution;
@@ -271,13 +277,13 @@ impl PosServer {
                 return;
             }
 
-            if task_job.pow_solution_index == u64::MAX {
+            if task_job.compute_pow_solution && task_job.pow_solution_index == u64::MAX {
                 // pow solution not found yet - look for it starting at start_index using existing buffer so
                 // no additional memory allocation is needed
                 match PosServer::find_pow_solution(&task_job, &task_config, start_idx, &mut buffer)
                 {
                     Ok(solution) => {
-                        info!("🍻 Pow solution found at index: {}", solution);
+                        info!("👊 Pow solution found at index: {}", solution);
                         task_job.pow_solution_index = solution;
                     }
                     Err(e) => {

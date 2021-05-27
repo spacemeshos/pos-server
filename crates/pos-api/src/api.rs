@@ -119,6 +119,9 @@ pub struct Job {
     /// index of the pow solution index. Only available for a completed job. u64:MAX means no solution.
     #[prost(uint64, tag = "15")]
     pub pow_solution_index: u64,
+    /// when false, job will only compute leaves. When true, job will compute leaves and a pow solution
+    #[prost(bool, tag = "16")]
+    pub compute_pow_solution: bool,
 }
 /// Nested message and enum types in `Job`.
 pub mod job {
@@ -202,6 +205,9 @@ pub struct AddJobRequest {
     /// Target pow difficulty, 32 bytes
     #[prost(bytes = "vec", tag = "5")]
     pub pow_difficulty: ::prost::alloc::vec::Vec<u8>,
+    /// when false, job will only compute leaves. When true, job will compute leaves and a pow solution
+    #[prost(bool, tag = "6")]
+    pub compute_pow_solution: bool,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AddJobResponse {

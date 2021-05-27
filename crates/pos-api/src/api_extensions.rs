@@ -180,16 +180,21 @@ impl Display for Job {
         }
 
         write!(f, "gpu id: {}. ", self.compute_provider_id)?;
-        if self.pow_solution_index == u64::MAX {
-            write!(f, "pow solution not found. ")?;
-        } else {
-            write!(f, "🍻 pow solution index: {}. ", self.pow_solution_index)?;
-        }
 
-        write!(
-            f,
-            "pow difficulty: {}.",
-            hex::encode(self.pow_difficulty.clone())
-        )
+        if !self.compute_pow_solution {
+            write!(f, "pow compute is off.")
+        } else {
+            if self.pow_solution_index == u64::MAX {
+                write!(f, " 🧱 pow solution not found. ")?;
+            } else {
+                write!(f, " 🧱👊 pow solution index: {}. ", self.pow_solution_index)?;
+            }
+
+            write!(
+                f,
+                "pow difficulty: {}.",
+                hex::encode(self.pow_difficulty.clone())
+            )
+        }
     }
 }
