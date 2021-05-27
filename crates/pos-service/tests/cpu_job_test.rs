@@ -1,8 +1,5 @@
 #[macro_use]
 extern crate log;
-
-//extern crate nix;
-
 extern crate pos_api;
 
 use log::LevelFilter;
@@ -11,6 +8,7 @@ use std::env;
 
 mod test_helpers;
 
+/// One simple job using cpu provider w/o pow computation
 #[tokio::test]
 async fn cpu_job_test_no_pow() {
     const POST_SIZE_BITS: u64 = 8192 * 64;

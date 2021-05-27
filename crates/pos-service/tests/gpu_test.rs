@@ -1,8 +1,5 @@
 #[macro_use]
 extern crate log;
-
-//extern crate nix;
-
 extern crate pos_api;
 
 use log::LevelFilter;
@@ -13,6 +10,7 @@ use std::env;
 
 mod test_helpers;
 
+/// One job using gpu provider with pow computation
 #[tokio::test]
 async fn gpu_job_test_pow() {
     const POST_SIZE_BITS: u64 = 32 * 1024 * 1024 * 3;

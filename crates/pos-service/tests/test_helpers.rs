@@ -1,7 +1,7 @@
 extern crate log;
-use log::info;
 extern crate pos_api;
 
+use log::info;
 use pos_api::api::job::JobStatus;
 use pos_api::api::pos_data_service_client::PosDataServiceClient;
 use pos_api::api::{Job, JobStatusStreamResponse};
@@ -23,7 +23,6 @@ pub struct Guard(pub Child);
 impl Drop for Guard {
     fn drop(&mut self) {
         let pid = self.0.id() as i32;
-        //        match signal::kill(Pid::from_raw(pid), Signal::SIGINT) {
         match self.0.kill() {
             Err(e) => info!("could not kill child process {}: {}", pid, e),
             Ok(_) => info!("killed guarded process {}", pid),
@@ -74,7 +73,7 @@ pub fn delete_pos_files(jobs: &Vec<Job>, data_dir: String) {
     }
 }
 
-// Rust linter doesn't recognize this helper is called by tests
+// For some reason rust linter doesn't recognize this helper is called by tests but it does for the other methods in this file
 #[allow(dead_code)]
 pub async fn job_status_handler(mut receiver: Streaming<JobStatusStreamResponse>) {
     while let Some(res) = receiver.next().await {

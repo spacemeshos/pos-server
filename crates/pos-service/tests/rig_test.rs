@@ -1,8 +1,5 @@
 #[macro_use]
 extern crate log;
-
-//extern crate nix;
-
 extern crate pos_api;
 
 use log::LevelFilter;
@@ -16,7 +13,7 @@ use tokio_stream::StreamExt;
 
 mod test_helpers;
 
-/// 16 long jobs using gpu providers only
+/// 16 long jobs using gpu providers only and pow computation
 #[tokio::test]
 async fn rig_test() {
     // Minimum is 268435456. Requested 134217728

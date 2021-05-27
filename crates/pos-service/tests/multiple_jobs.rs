@@ -1,8 +1,5 @@
 #[macro_use]
 extern crate log;
-
-//extern crate nix;
-
 extern crate pos_api;
 
 use log::LevelFilter;
@@ -15,7 +12,7 @@ use tokio_stream::StreamExt;
 
 mod test_helpers;
 
-/// Multiple short jobs using cpu provider
+/// Multiple short jobs using cpu provider with pow computation
 #[tokio::test]
 async fn multiple_jobs_test() {
     const POST_SIZE_BITS: u64 = 8192 * 32;
