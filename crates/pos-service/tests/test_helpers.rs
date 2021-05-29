@@ -54,7 +54,7 @@ pub async fn start_server(use_cpu_provider: bool) -> (PosDataServiceClient<Chann
         .unwrap();
 
     // grpc server async warmup
-    sleep(Duration::from_secs(5)).await;
+    sleep(Duration::from_secs(30)).await;
 
     (
         PosDataServiceClient::connect(format!("http://[::1]:{}", 6667))
