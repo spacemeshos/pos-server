@@ -30,7 +30,7 @@ impl Drop for Guard {
     }
 }
 
-/// Start pos server and return grpc client to its
+/// Start a pos server and return grpc client for it
 pub async fn start_server(use_cpu_provider: bool) -> (PosDataServiceClient<Channel>, Guard) {
     let tests_path = env::current_dir().unwrap().join("tests");
 
@@ -64,6 +64,7 @@ pub async fn start_server(use_cpu_provider: bool) -> (PosDataServiceClient<Chann
     )
 }
 
+/// Delete generated pos files for jobs at the provided data dir
 pub fn delete_pos_files(jobs: &Vec<Job>, data_dir: String) {
     for job in jobs {
         let file_name = job.file_name();
@@ -73,7 +74,7 @@ pub fn delete_pos_files(jobs: &Vec<Job>, data_dir: String) {
     }
 }
 
-// For some reason rust linter doesn't recognize this helper is called by tests but it does for the other methods in this file
+/// For some reason rust linter doesn't recognize this helper is called by tests but it does for the other methods in this file
 #[allow(dead_code)]
 pub async fn job_status_handler(mut receiver: Streaming<JobStatusStreamResponse>) {
     while let Some(res) = receiver.next().await {
