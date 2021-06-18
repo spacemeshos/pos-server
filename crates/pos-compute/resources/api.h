@@ -25,6 +25,7 @@ extern "C" {
 #define	SPACEMESH_API_ERROR_CANCELED			-4
 #define	SPACEMESH_API_ERROR_NO_COMPOTE_OPTIONS	-5
 #define	SPACEMESH_API_ERROR_INVALID_PARAMETER	-6
+#define	SPACEMESH_API_ERROR_INVALID_PROVIDER_ID	-7
 
 #define	SPACEMESH_API_THROTTLED_MODE	0x00008000
 
@@ -84,6 +85,9 @@ SPACEMESHAPI int spacemesh_api_get_providers(
 SPACEMESHAPI void spacemesh_api_logging(
 	int enable
 );
+
+// library shutdown
+SPACEMESHAPI void spacemesh_api_shutdown(void);
 
 SPACEMESHAPI int64_t unit_test_hash(uint32_t provider_id, uint8_t *input, uint8_t *hashes);
 SPACEMESHAPI int64_t unit_test_bit_stream(uint32_t provider_id, uint8_t *hashes, uint64_t count, uint8_t *output, uint32_t hash_len_bits);
