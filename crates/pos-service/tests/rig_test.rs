@@ -40,7 +40,7 @@ async fn rig_test() {
         .config
         .unwrap();
 
-    const POST_SIZE_BITS: u64 = 32 * 1024 * 1024 * 3;
+    const POST_SIZE_BITS: u64 = 32 * 1024 * 1024 * 3 * 4;
 
     config.indexes_per_compute_cycle = 4 * 1024 * 1024;
 
